@@ -1,0 +1,21 @@
+# Project
+.trae/
+.vs/
+.vscode/
+documentations/
+release/
+
+# Sample Sample Plugin
+*.pro.user*
+*.o
+ui_*
+moc_*
+qrc_*
+Makefile
+OpenRGB-x86_64.AppImage
+.qmake.stash
+.vscode
+debug/
+build
+Ship
+www/*
