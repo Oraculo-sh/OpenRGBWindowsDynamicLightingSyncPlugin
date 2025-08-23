@@ -4,6 +4,13 @@
 #include "OpenRGBPluginInterface.h"
 #include "ResourceManagerInterface.h"
 
+// Define export macro for plugin functions
+#ifdef _WIN32
+    #define OPENRGBPLUGININTERFACE_EXPORT __declspec(dllexport)
+#else
+    #define OPENRGBPLUGININTERFACE_EXPORT
+#endif
+
 #include <QObject>
 #include <QString>
 #include <QtPlugin>

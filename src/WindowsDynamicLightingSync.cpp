@@ -307,4 +307,27 @@ void DynamicLightingWorker::CleanupWindowsAPI()
 #endif
 }
 
+// Plugin export functions required by OpenRGB
+extern "C" {
+    OPENRGBPLUGININTERFACE_EXPORT OpenRGBPluginInterface* GetOpenRGBPluginInterface()
+    {
+        return new WindowsDynamicLightingSync();
+    }
+
+    OPENRGBPLUGININTERFACE_EXPORT const char* GetOpenRGBPluginName()
+    {
+        return "Windows Dynamic Lighting Sync";
+    }
+
+    OPENRGBPLUGININTERFACE_EXPORT const char* GetOpenRGBPluginDescription()
+    {
+        return "Sincroniza dispositivos RGB com a Iluminação Dinâmica do Windows";
+    }
+
+    OPENRGBPLUGININTERFACE_EXPORT const char* GetOpenRGBPluginVersion()
+    {
+        return "1.0.0";
+    }
+}
+
 #include "WindowsDynamicLightingSync.moc"
