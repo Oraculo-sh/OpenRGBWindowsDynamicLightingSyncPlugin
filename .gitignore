@@ -4,6 +4,12 @@
 .vscode/
 documentations/
 release/
+build/
+*.dll
+*.exp
+*.lib
+*.pdb
+*.ilk
 
 # Sample Sample Plugin
 *.pro.user*
