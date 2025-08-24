@@ -1,4 +1,8 @@
 [submodule "OpenRGB"]
-	path = OpenRGB
+	path = ./dependencies/OpenRGB
 	url = https://gitlab.com/CalcProgrammer1/OpenRGB.git
+	branch = master
+[submodule "OpenRGBSamplePlugin"]
+	path = ./dependencies/OpenRGBSamplePlugin
+	url = https://gitlab.com/OpenRGBDevelopers/OpenRGBSamplePlugin.git
 	branch = master
