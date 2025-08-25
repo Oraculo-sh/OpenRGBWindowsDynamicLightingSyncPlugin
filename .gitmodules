@@ -1,7 +1,3 @@
-[submodule "OpenRGBSamplePlugin"]
-	path = dependencies/OpenRGBSamplePlugin
-	url = https://gitlab.com/OpenRGBDevelopers/OpenRGBSamplePlugin.git
-	branch = master
 [submodule "dependencies/OpenRGBSamplePlugin"]
 	path = dependencies/OpenRGBSamplePlugin
 	url = https://gitlab.com/OpenRGBDevelopers/OpenRGBSamplePlugin.git
