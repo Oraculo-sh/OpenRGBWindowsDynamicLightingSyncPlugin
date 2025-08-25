@@ -10,6 +10,12 @@ _intermediate_release
 *.lib
 *.pdb
 *.ilk
+test_moc.cpp
+test_moc2.cpp
+test_moc3.cpp
+*.obj
+*.res
+*.manifest
 
 # Sample Sample Plugin
 *.pro.user*
@@ -18,6 +24,7 @@ ui_*
 moc_*
 qrc_*
 Makefile
+Makefile.*
 OpenRGB-x86_64.AppImage
 .qmake.stash
 .vscode
