@@ -74,12 +74,12 @@ GIT_BRANCH      = $$system(git --git-dir $$_PRO_FILE_PWD_/.git --work-tree $$_PR
 # Inject vars in defines                                                                        #
 #-----------------------------------------------------------------------------------------------#
 DEFINES +=                                                                                      \
-    VERSION_STRING=\\\"$$VERSION_STR\\\"                                                  \
-    BUILDDATE_STRING=\\\"$$BUILDDATE\\\"                                                  \
-    GIT_COMMIT_ID=\\\"$$GIT_COMMIT_ID\\\"                                                 \
-    GIT_COMMIT_DATE=\\\"$$GIT_COMMIT_DATE\\\"                                             \
-    GIT_BRANCH=\\\"$$GIT_BRANCH\\\"                                                       \
-    LATEST_BUILD_URL=\\\"$$LATEST_BUILD_URL\\\"                                           \
+    \"VERSION_STRING=\\\"$$VERSION_STR\\\"\"                                                \
+    \"BUILDDATE_STRING=\\\"$$BUILDDATE\\\"\"                                                \
+    \"GIT_COMMIT_ID=\\\"$$GIT_COMMIT_ID\\\"\"                                               \
+    \"GIT_COMMIT_DATE=\\\"$$GIT_COMMIT_DATE\\\"\"                                           \
+    \"GIT_BRANCH=\\\"$$GIT_BRANCH\\\"\"                                                     \
+    \"LATEST_BUILD_URL=\\\"$$LATEST_BUILD_URL\\\"\"                                 \
 
 #-----------------------------------------------------------------------------------------------#
 # Includes                                                                                      #
@@ -101,7 +101,10 @@ INCLUDEPATH +=                                                                  
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/i2c_smbus                                      \
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/RGBController                                   \
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/net_port                                        \
+    ../dependencies/OpenRGBSamplePlugin/OpenRGB/SPDAccessor                                     \
+    ../dependencies/OpenRGBSamplePlugin/OpenRGB/hidapi_wrapper                                  \
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/dependencies/json                               \
+    ../dependencies/OpenRGBSamplePlugin/OpenRGB/dependencies/hidapi-win/include                 \
 
 HEADERS +=                                                                                      \
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/OpenRGBPluginInterface.h                       \
@@ -128,12 +131,16 @@ win32:contains(QMAKE_TARGET.arch, x86_64) {
     LIBS +=                                                                                     \
         -lws2_32                                                                                \
         -lole32                                                                                 \
+        -lwindowsapp                                                                            \
+        -lruntimeobject                                                                         \
 }
 
 win32:contains(QMAKE_TARGET.arch, x86) {
     LIBS +=                                                                                     \
         -lws2_32                                                                                \
         -lole32                                                                                 \
+        -lwindowsapp                                                                            \
+        -lruntimeobject                                                                         \
 }
 
 win32:DEFINES +=                                                                                \
@@ -142,6 +149,7 @@ win32:DEFINES +=                                                                
     _CRT_SECURE_NO_WARNINGS                                                                     \
     _WINSOCK_DEPRECATED_NO_WARNINGS                                                             \
     WIN32_LEAN_AND_MEAN                                                                         \
+    WINRT_LEAN_AND_MEAN                                                                         \
 
 #-----------------------------------------------------------------------------------------------#
 # Linux-specific Configuration                                                                  #
