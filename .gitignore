@@ -4,7 +4,7 @@
 .vscode/
 documentations/
 release/
-build/
+_intermediate_release
 *.dll
 *.exp
 *.lib
@@ -22,6 +22,7 @@ OpenRGB-x86_64.AppImage
 .qmake.stash
 .vscode
 debug/
+_intermediate_debug
 build
 Ship
 www/*
