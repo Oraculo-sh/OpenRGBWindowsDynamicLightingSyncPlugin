@@ -86,9 +86,11 @@ DEFINES +=                                                                      
 #-----------------------------------------------------------------------------------------------#
 HEADERS +=                                                                                      \
     WindowsDynamicLightingSync.h                                                                \
+    ../dependencies/OpenRGBSamplePlugin/OpenRGB/LogManager.h                                    \
 
 SOURCES +=                                                                                      \
     WindowsDynamicLightingSync.cpp                                                              \
+    ../dependencies/OpenRGBSamplePlugin/OpenRGB/LogManager.cpp                                  \
 
 RESOURCES +=                                                                                    \
     resources.qrc
