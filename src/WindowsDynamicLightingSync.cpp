@@ -22,11 +22,8 @@ WindowsDynamicLightingSync::WindowsDynamicLightingSync()
     , dark_theme_enabled(false)
     , sync_enabled(true)
     , sync_interval_ms(100)
-    , auto_detect_devices(true)
     , logging_enabled(false)
     , widget(nullptr)
-    , statusLabel(nullptr)
-    , toggleButton(nullptr)
     , enableCheckBox(nullptr)
     , deviceCountLabel(nullptr)
     , syncTimer(nullptr)
@@ -34,8 +31,6 @@ WindowsDynamicLightingSync::WindowsDynamicLightingSync()
     , isDynamicLightingEnabled(false)
     , darkTheme(false)
     , testColor(0x00FF0000)
-    , bidirectional_sync(true)
-    , smooth_transitions(true)
     , brightness_multiplier(1.0f)
     , log_file_path("WindowsDynamicLightingSync.log")
     , show_error_dialogs(false)
@@ -247,10 +242,6 @@ void WindowsDynamicLightingSync::setupUI()
     infoLayout->addWidget(refreshButton);
     
     mainLayout->addWidget(infoGroup);
-    connect(brightnessSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [this](double value) {
-        brightness_multiplier = static_cast<float>(value);
-        SaveSettings();
-    });
     
     // Inicializar informações do sistema
     updateSystemInfo();
@@ -275,25 +266,19 @@ void WindowsDynamicLightingSync::onToggleDynamicLighting()
     if (sender() == enableCheckBox)
     {
         isDynamicLightingEnabled = enableCheckBox->isChecked();
-        toggleButton->setEnabled(isDynamicLightingEnabled);
         
         if (isDynamicLightingEnabled)
         {
-            toggleButton->setText("Desativar Dynamic Lighting");
-            statusLabel->setText("Status: Habilitado - Aguardando ativação");
+            if (apiStatusLabel) {
+                apiStatusLabel->setText("API Windows Dynamic Lighting: ✓ Habilitado");
+            }
         }
         else
         {
-            toggleButton->setText("Ativar Dynamic Lighting");
-            statusLabel->setText("Status: Desabilitado");
+            if (apiStatusLabel) {
+                apiStatusLabel->setText("API Windows Dynamic Lighting: ○ Desabilitado");
+            }
             enableDynamicLighting(false);
-        }
-    }
-    else if (sender() == toggleButton)
-    {
-        if (isDynamicLightingEnabled)
-        {
-            enableDynamicLighting(!syncTimer->isActive());
         }
     }
 }
@@ -304,8 +289,9 @@ void WindowsDynamicLightingSync::enableDynamicLighting(bool enable)
     {
         // Iniciar sincronização
         syncTimer->start(100); // Atualizar a cada 100ms
-        statusLabel->setText("Status: Ativo - Sincronizando");
-        toggleButton->setText("Desativar Dynamic Lighting");
+        if (systemStatusLabel) {
+            systemStatusLabel->setText("Status Windows Dynamic Lighting: ✓ Ativo - Sincronizando");
+        }
         
         // Aplicar iluminação inicial
         applyLightingToAllDevices();
@@ -317,8 +303,9 @@ void WindowsDynamicLightingSync::enableDynamicLighting(bool enable)
         {
             syncTimer->stop();
         }
-        statusLabel->setText("Status: Habilitado - Inativo");
-        toggleButton->setText("Ativar Dynamic Lighting");
+        if (systemStatusLabel) {
+            systemStatusLabel->setText("Status Windows Dynamic Lighting: ○ Inativo");
+        }
     }
 }
 
@@ -354,14 +341,16 @@ void WindowsDynamicLightingSync::updateDeviceListUI()
     }
     
     // Limpar lista atual
-    QWidget* oldWidget = deviceListWidget->widget();
-    if (oldWidget) {
-        delete oldWidget;
+    if (deviceListLayout) {
+        QLayoutItem* item;
+        while ((item = deviceListLayout->takeAt(0)) != nullptr) {
+            delete item->widget();
+            delete item;
+        }
     }
     
-    // Criar novo widget para a lista
-    QWidget* listWidget = new QWidget();
-    QVBoxLayout* listLayout = new QVBoxLayout(listWidget);
+    // Usar o layout existente
+    QVBoxLayout* listLayout = deviceListLayout;
     
     try {
         std::vector<RGBController*> controllers = RMPointer->GetRGBControllers();
@@ -389,7 +378,7 @@ void WindowsDynamicLightingSync::updateDeviceListUI()
                 
                 // Informações do dispositivo
                 QLabel* infoLabel = new QLabel(QString("Tipo: %1 | LEDs: %2 | Zonas: %3")
-                    .arg(QString::fromStdString(controller->type))
+                    .arg(QString::fromStdString(controller->name))
                     .arg(controller->leds.size())
                     .arg(controller->zones.size()));
                 infoLabel->setStyleSheet("color: #666; font-size: 11px;");
@@ -420,7 +409,6 @@ void WindowsDynamicLightingSync::updateDeviceListUI()
     }
     
     listLayout->addStretch();
-    deviceListWidget->setWidget(listWidget);
 }
 
 void WindowsDynamicLightingSync::onBrightnessChanged(int value)
@@ -897,7 +885,6 @@ void WindowsDynamicLightingSync::SyncWithDynamicLighting()
         }
         
         // Perform bidirectional sync based on configuration
-        if (bidirectional_sync)
         {
             // Sync OpenRGB colors to Windows Dynamic Lighting
             SyncOpenRGBToWindows();
@@ -1130,19 +1117,9 @@ void WindowsDynamicLightingSync::syncWithWindowsLighting()
 }
 
 // Sync configuration methods
-void WindowsDynamicLightingSync::SetBidirectionalSync(bool enable)
-{
-    if (bidirectional_sync != enable)
-    {
-        bidirectional_sync = enable;
-        // Bidirectional sync " + std::string(enable ? "enabled" : "disabled")
-    }
-}
 
-bool WindowsDynamicLightingSync::IsBidirectionalSyncEnabled() const
-{
-    return bidirectional_sync;
-}
+
+
 
 void WindowsDynamicLightingSync::SetSyncInterval(int interval_ms)
 {
@@ -1164,19 +1141,7 @@ int WindowsDynamicLightingSync::GetSyncInterval() const
     return sync_interval_ms;
 }
 
-void WindowsDynamicLightingSync::SetSmoothTransitions(bool enable)
-{
-    if (smooth_transitions != enable)
-    {
-        smooth_transitions = enable;
-        // Smooth transitions " + std::string(enable ? "enabled" : "disabled")
-    }
-}
 
-bool WindowsDynamicLightingSync::IsSmoothTransitionsEnabled() const
-{
-    return smooth_transitions;
-}
 
 void WindowsDynamicLightingSync::SetBrightnessMultiplier(float multiplier)
 {
