@@ -184,6 +184,8 @@ private:
     void CleanupDynamicLighting();
     bool CheckDynamicLightingSupport();
     void SyncWithDynamicLighting();
+    bool RegisterPluginAsDevice();
+    void UnregisterPluginAsDevice();
     
     // Device management methods - Simplified
     // Removed: DetectCompatibleDevices(), RefreshDeviceList() - OpenRGB handles detection
@@ -200,11 +202,7 @@ private:
     void SaveSettings();
     
     // Error handling and logging methods
-    void                        LogError(const std::string& message);
-    void                        LogWarning(const std::string& message);
-    void                        LogInfo(const std::string& message);
-    void                        WriteToLogFile(const std::string& level, const std::string& message);
-    void                        CheckAndRotateLogFile();
+    // Logging system removed - OpenRGB handles all logging
     void                        HandleException(const std::exception& e, const std::string& context);
     bool                        SafeExecute(std::function<void()> func, const std::string& operation);
     void                        ShowErrorDialog(const QString& title, const QString& message);

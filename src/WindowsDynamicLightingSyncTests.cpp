@@ -119,15 +119,8 @@ public:
     }
     
     void TestLoggingSystem() {
-        // Test logging methods don't crash
-        try {
-            plugin->LogInfo("Test info message");
-            plugin->LogWarning("Test warning message");
-            plugin->LogError("Test error message");
-            TestFramework::assert_true(true, "Logging methods execute without exception");
-        } catch (...) {
-            TestFramework::assert_true(false, "Logging methods execute without exception");
-        }
+        // Logging system removed - OpenRGB handles all logging
+        TestFramework::assert_true(true, "Logging system test skipped - handled by OpenRGB");
     }
     
     void TestErrorHandling() {
