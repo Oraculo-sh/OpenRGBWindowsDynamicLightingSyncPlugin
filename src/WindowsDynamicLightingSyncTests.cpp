@@ -103,25 +103,16 @@ public:
     
     void TestConfigurationDefaults() {
         // Test default configuration values
-        TestFramework::assert_true(plugin->IsBidirectionalSyncEnabled() == true, "Default bidirectional sync");
+        // Removed tests for deprecated features: bidirectional sync, smooth transitions, auto detect
         TestFramework::assert_true(plugin->GetSyncInterval() == 100, "Default sync interval");
-        TestFramework::assert_true(plugin->IsSmoothTransitionsEnabled() == true, "Default smooth transitions");
-        TestFramework::assert_true(plugin->IsAutoDetectEnabled() == true, "Default auto detect");
     }
     
     void TestConfigurationSetters() {
         // Test configuration setters
-        plugin->SetBidirectionalSync(false);
-        TestFramework::assert_true(plugin->IsBidirectionalSyncEnabled() == false, "Set bidirectional sync false");
+        // Removed tests for deprecated features: bidirectional sync, smooth transitions, auto detect
         
         plugin->SetSyncInterval(200);
         TestFramework::assert_true(plugin->GetSyncInterval() == 200, "Set sync interval 200ms");
-        
-        plugin->SetSmoothTransitions(false);
-        TestFramework::assert_true(plugin->IsSmoothTransitionsEnabled() == false, "Set smooth transitions false");
-        
-        plugin->SetAutoDetectDevices(false);
-        TestFramework::assert_true(plugin->IsAutoDetectEnabled() == false, "Set auto detect false");
         
         plugin->SetBrightnessMultiplier(0.8f);
         // Note: We'd need a getter for brightness multiplier to test this properly
@@ -160,12 +151,13 @@ public:
     }
     
     void TestDeviceDetection() {
-        // Test device detection without actual devices
+        // Device detection is now handled by OpenRGB
+        // Test that device list update works without exception
         try {
-            plugin->DetectCompatibleDevices();
-            TestFramework::assert_true(true, "Device detection executes without exception");
+            plugin->updateDeviceList();
+            TestFramework::assert_true(true, "Device list update executes without exception");
         } catch (...) {
-            TestFramework::assert_true(false, "Device detection executes without exception");
+            TestFramework::assert_true(false, "Device list update executes without exception");
         }
     }
     

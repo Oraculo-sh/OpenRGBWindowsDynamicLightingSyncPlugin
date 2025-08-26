@@ -25,6 +25,8 @@
 #include <QGroupBox>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
+#include <QSlider>
+#include <QScrollArea>
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -97,6 +99,9 @@ private slots:
     void onToggleDynamicLighting();
     void updateDeviceList();
     void syncLighting();
+    void updateSystemInfo();
+    void updateDeviceListUI();
+    void onBrightnessChanged(int value);
 
 private:
     void                setupUI();
@@ -111,10 +116,32 @@ private:
 #endif
     
     QWidget*                    widget;
-    QLabel*                     statusLabel;
-    QPushButton*                toggleButton;
+    
+    // Controle Dynamic Lighting Sync Plugin
     QCheckBox*                  enableCheckBox;
+    QLabel*                     apiStatusLabel;
+    QLabel*                     systemStatusLabel;
+    QLabel*                     currentEffectLabel;
+    QLabel*                     directionLabel;
+    QLabel*                     primaryColorLabel;
+    QLabel*                     secondaryColorLabel;
+    
+    // Dispositivos
     QLabel*                     deviceCountLabel;
+    QWidget*                    deviceListWidget;
+    QVBoxLayout*                deviceListLayout;
+    
+    // Configurações
+    QCheckBox*                  brightnessControlCheckBox;
+    QSlider*                    brightnessSlider;
+    QLabel*                     brightnessValueLabel;
+    
+    // Informações do Sistema
+    QLabel*                     osInfoLabel;
+    QLabel*                     compatibilityLabel;
+    QLabel*                     versionLabel;
+    QLabel*                     urlLabel;
+    
     QTimer*                     syncTimer;
     QTimer*                     sync_timer;
     QMutex                      sync_mutex;
@@ -128,14 +155,12 @@ private:
     
     // Sync configuration
     bool                        sync_enabled;
-    bool                        bidirectional_sync;
     int                         sync_interval_ms;
-    bool                        smooth_transitions;
     float                       brightness_multiplier;
-    bool                        auto_detect_devices;
     bool                        logging_enabled;
     bool                        is_loaded;
     bool                        dark_theme_enabled;
+    // Funcionalidades removidas: bidirectional_sync, smooth_transitions, auto_detect_devices
     
     // Error handling and logging
     std::string                 log_file_path;
@@ -160,21 +185,15 @@ private:
     bool CheckDynamicLightingSupport();
     void SyncWithDynamicLighting();
     
-    // Device management methods
-    void DetectCompatibleDevices();
-    void RefreshDeviceList();
+    // Device management methods - Simplified
+    // Removed: DetectCompatibleDevices(), RefreshDeviceList() - OpenRGB handles detection
     std::vector<RGBController*> GetCompatibleControllers();
     void UpdateDeviceColors();
-    void SetAutoDetectDevices(bool enable);
-    bool IsAutoDetectEnabled() const;
     
     // Sync configuration methods
-    void SetBidirectionalSync(bool enable);
-    bool IsBidirectionalSyncEnabled() const;
     void SetSyncInterval(int interval_ms);
     int GetSyncInterval() const;
-    void SetSmoothTransitions(bool enable);
-    bool IsSmoothTransitionsEnabled() const;
+    // Métodos removidos: DetectCompatibleDevices, RefreshDeviceList, SetAutoDetectDevices, IsAutoDetectEnabled, SetBidirectionalSync, IsBidirectionalSyncEnabled, SetSmoothTransitions, IsSmoothTransitionsEnabled
     
     // Settings management methods
     void LoadSettings();

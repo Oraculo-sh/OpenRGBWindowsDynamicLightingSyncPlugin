@@ -117,58 +117,54 @@ void WindowsDynamicLightingSync::setupUI()
     // Layout principal
     QVBoxLayout* mainLayout = new QVBoxLayout(widget);
     
-    // Grupo de controle principal
-    QGroupBox* controlGroup = new QGroupBox("Controle do Windows Dynamic Lighting");
+    // === 1. Submenu: Controle Dynamic Lighting Sync Plugin ===
+    QGroupBox* controlGroup = new QGroupBox("Controle Dynamic Lighting Sync Plugin");
     QVBoxLayout* controlLayout = new QVBoxLayout(controlGroup);
     
-    // Checkbox para habilitar/desabilitar
-    enableCheckBox = new QCheckBox("Habilitar Windows Dynamic Lighting");
+    // Checkbox principal para habilitar/desabilitar
+    enableCheckBox = new QCheckBox("Habilitar Dynamic Lighting Sync");
     enableCheckBox->setChecked(isDynamicLightingEnabled);
     connect(enableCheckBox, &QCheckBox::toggled, this, &WindowsDynamicLightingSync::onToggleDynamicLighting);
     
-    // Botão de toggle
-    toggleButton = new QPushButton("Ativar Dynamic Lighting");
-    toggleButton->setEnabled(false);
-    connect(toggleButton, &QPushButton::clicked, this, &WindowsDynamicLightingSync::onToggleDynamicLighting);
-    
-    // Label de status
-    statusLabel = new QLabel("Status: Desabilitado");
-    
-    // Label de contagem de dispositivos
-    deviceCountLabel = new QLabel("Dispositivos detectados: 0");
-    
-    // Botão de teste de cor
-    QPushButton* testColorButton = new QPushButton("Testar Cor (Azul)");
-    testColorButton->setToolTip("Aplica uma cor azul de teste a todos os dispositivos");
-    connect(testColorButton, &QPushButton::clicked, [this]() {
-        testColor = 0x000000FF; // Azul
-        applyLightingToAllDevices();
-        statusLabel->setText("Status: Teste de cor aplicado (Azul)");
-    });
-    
-    // Botão de teste de cor vermelha
-    QPushButton* testRedButton = new QPushButton("Testar Cor (Vermelho)");
-    testRedButton->setToolTip("Aplica uma cor vermelha de teste a todos os dispositivos");
-    connect(testRedButton, &QPushButton::clicked, [this]() {
-        testColor = 0x00FF0000; // Vermelho
-        applyLightingToAllDevices();
-        statusLabel->setText("Status: Teste de cor aplicado (Vermelho)");
-    });
-    
-    // Layout para botões de teste
-    QHBoxLayout* testButtonsLayout = new QHBoxLayout();
-    testButtonsLayout->addWidget(testColorButton);
-    testButtonsLayout->addWidget(testRedButton);
+    // Labels de status da API e sistema
+    apiStatusLabel = new QLabel("API Windows Dynamic Lighting: Conectando...");
+    systemStatusLabel = new QLabel("Status Windows Dynamic Lighting: (Verificando)");
+    currentEffectLabel = new QLabel("Efeito atual: (Não detectado)");
+    directionLabel = new QLabel("Direção: (Não aplicável)");
+    primaryColorLabel = new QLabel("Cor Principal: (Não definida)");
+    secondaryColorLabel = new QLabel("Cor Secundaria: (Não definida)");
     
     controlLayout->addWidget(enableCheckBox);
-    controlLayout->addWidget(toggleButton);
-    controlLayout->addLayout(testButtonsLayout);
-    controlLayout->addWidget(statusLabel);
-    controlLayout->addWidget(deviceCountLabel);
+    controlLayout->addWidget(apiStatusLabel);
+    controlLayout->addWidget(systemStatusLabel);
+    controlLayout->addWidget(currentEffectLabel);
+    controlLayout->addWidget(directionLabel);
+    controlLayout->addWidget(primaryColorLabel);
+    controlLayout->addWidget(secondaryColorLabel);
     
     mainLayout->addWidget(controlGroup);
     
-    // Grupo de configurações avançadas
+    // === 2. Submenu: Dispositivos ===
+    QGroupBox* devicesGroup = new QGroupBox("Dispositivos");
+    QVBoxLayout* devicesLayout = new QVBoxLayout(devicesGroup);
+    
+    // Contador de dispositivos
+    deviceCountLabel = new QLabel("Dispositivos detectados: 0");
+    devicesLayout->addWidget(deviceCountLabel);
+    
+    // Container para lista de dispositivos
+    deviceListWidget = new QWidget();
+    deviceListLayout = new QVBoxLayout(deviceListWidget);
+    
+    QScrollArea* deviceScrollArea = new QScrollArea();
+    deviceScrollArea->setWidget(deviceListWidget);
+    deviceScrollArea->setWidgetResizable(true);
+    deviceScrollArea->setMaximumHeight(200);
+    
+    devicesLayout->addWidget(deviceScrollArea);
+    mainLayout->addWidget(devicesGroup);
+    
+    // === 3. Submenu: Configurações ===
     QGroupBox* configGroup = new QGroupBox("Configurações");
     QVBoxLayout* configLayout = new QVBoxLayout(configGroup);
     
@@ -189,92 +185,73 @@ void WindowsDynamicLightingSync::setupUI()
     intervalLayout->addWidget(intervalLabel);
     intervalLayout->addWidget(intervalSpinBox);
     
-    // Configuração de multiplicador de brilho
+    // Controle de brilho
+    brightnessControlCheckBox = new QCheckBox("Habilitar controle de brilho");
+    brightnessControlCheckBox->setChecked(false);
+    
     QHBoxLayout* brightnessLayout = new QHBoxLayout();
-    QLabel* brightnessLabel = new QLabel("Multiplicador de Brilho:");
-    QDoubleSpinBox* brightnessSpinBox = new QDoubleSpinBox();
-    brightnessSpinBox->setRange(0.1, 2.0);
-    brightnessSpinBox->setSingleStep(0.1);
-    brightnessSpinBox->setValue(brightness_multiplier);
-    brightnessSpinBox->setDecimals(1);
+    QLabel* brightnessLabel = new QLabel("Substituir Brilho:");
+    brightnessSlider = new QSlider(Qt::Horizontal);
+    brightnessSlider->setRange(0, 20); // 0.0 to 2.0 with 0.1 steps
+    brightnessSlider->setValue(10); // 1.0 default
+    brightnessSlider->setEnabled(false);
+    
+    brightnessValueLabel = new QLabel("1.0");
+    
+    connect(brightnessControlCheckBox, &QCheckBox::toggled, [this](bool checked) {
+        brightnessSlider->setEnabled(checked);
+        SaveSettings();
+    });
+    
+    connect(brightnessSlider, &QSlider::valueChanged, [this](int value) {
+        float brightness = value / 10.0f;
+        brightness_multiplier = brightness;
+        brightnessValueLabel->setText(QString::number(brightness, 'f', 1));
+        SaveSettings();
+    });
+    
+    brightnessLayout->addWidget(brightnessLabel);
+    brightnessLayout->addWidget(brightnessSlider);
+    brightnessLayout->addWidget(brightnessValueLabel);
+    
+    configLayout->addLayout(intervalLayout);
+    configLayout->addWidget(brightnessControlCheckBox);
+    configLayout->addLayout(brightnessLayout);
+    
+    mainLayout->addWidget(configGroup);
+    
+    // === 4. Submenu: Informações do Sistema ===
+    QGroupBox* infoGroup = new QGroupBox("Informações do Sistema");
+    QVBoxLayout* infoLayout = new QVBoxLayout(infoGroup);
+    
+    // Informações do sistema
+    osInfoLabel = new QLabel("OS: Detectando...");
+    compatibilityLabel = new QLabel("Compatibilidade com Windows Dynamic Lighting: Verificando...");
+    versionLabel = new QLabel(QString("Versão do Plugin: 1.0.0 (Commit: %1)").arg(GIT_COMMIT_ID));
+    urlLabel = new QLabel("<a href='https://github.com/Oraculo-sh/OpenRGBWindowsDynamicLightingSyncPlugin'>https://github.com/Oraculo-sh/OpenRGBWindowsDynamicLightingSyncPlugin</a>");
+    urlLabel->setOpenExternalLinks(true);
+    
+    // Botão para atualizar informações
+    QPushButton* refreshButton = new QPushButton("Atualizar Informações");
+    connect(refreshButton, &QPushButton::clicked, [this]() {
+        updateSystemInfo();
+        updateDeviceList();
+    });
+    
+    infoLayout->addWidget(osInfoLabel);
+    infoLayout->addWidget(compatibilityLabel);
+    infoLayout->addWidget(versionLabel);
+    infoLayout->addWidget(urlLabel);
+    infoLayout->addWidget(refreshButton);
+    
+    mainLayout->addWidget(infoGroup);
     connect(brightnessSpinBox, QOverload<double>::of(&QDoubleSpinBox::valueChanged), [this](double value) {
         brightness_multiplier = static_cast<float>(value);
         SaveSettings();
     });
-    brightnessLayout->addWidget(brightnessLabel);
-    brightnessLayout->addWidget(brightnessSpinBox);
     
-    // Checkbox para sincronização bidirecional
-    QCheckBox* bidirectionalCheckBox = new QCheckBox("Sincronização Bidirecional");
-    bidirectionalCheckBox->setChecked(bidirectional_sync);
-    bidirectionalCheckBox->setToolTip("Permite que mudanças no Windows Dynamic Lighting afetem o OpenRGB");
-    connect(bidirectionalCheckBox, &QCheckBox::toggled, [this](bool checked) {
-        bidirectional_sync = checked;
-        SaveSettings();
-    });
-    
-    // Checkbox para transições suaves
-    QCheckBox* smoothCheckBox = new QCheckBox("Transições Suaves");
-    smoothCheckBox->setChecked(smooth_transitions);
-    smoothCheckBox->setToolTip("Ativa transições suaves entre cores");
-    connect(smoothCheckBox, &QCheckBox::toggled, [this](bool checked) {
-        smooth_transitions = checked;
-        SaveSettings();
-    });
-    
-    // Checkbox para detecção automática de dispositivos
-    QCheckBox* autoDetectCheckBox = new QCheckBox("Detecção Automática de Dispositivos");
-    autoDetectCheckBox->setChecked(auto_detect_devices);
-    connect(autoDetectCheckBox, &QCheckBox::toggled, [this](bool checked) {
-        auto_detect_devices = checked;
-        SaveSettings();
-    });
-    
-    // Checkbox para logging
-    QCheckBox* loggingCheckBox = new QCheckBox("Habilitar Logging");
-    loggingCheckBox->setChecked(logging_enabled);
-    connect(loggingCheckBox, &QCheckBox::toggled, [this](bool checked) {
-        logging_enabled = checked;
-        SaveSettings();
-    });
-    
-    configLayout->addLayout(intervalLayout);
-    configLayout->addLayout(brightnessLayout);
-    configLayout->addWidget(bidirectionalCheckBox);
-    configLayout->addWidget(smoothCheckBox);
-    configLayout->addWidget(autoDetectCheckBox);
-    configLayout->addWidget(loggingCheckBox);
-    
-    mainLayout->addWidget(configGroup);
-    
-    // Grupo de informações do sistema
-    QGroupBox* infoGroup = new QGroupBox("Informações do Sistema");
-    QVBoxLayout* infoLayout = new QVBoxLayout(infoGroup);
-    
-    // Label de suporte ao Windows Dynamic Lighting
-    QLabel* supportLabel = new QLabel("Suporte ao Windows Dynamic Lighting: Verificando...");
-    
-    // Label de versão do plugin
-    QLabel* versionLabel = new QLabel(QString("Versão do Plugin: 1.0.0 (Commit: %1)").arg(GIT_COMMIT_ID));
-    
-    // Botão para atualizar informações
-    QPushButton* refreshButton = new QPushButton("Atualizar Informações");
-    connect(refreshButton, &QPushButton::clicked, [this, supportLabel]() {
-        updateDeviceList();
-#ifdef _WIN32
-        bool hasSupport = CheckDynamicLightingSupport();
-        supportLabel->setText(QString("Suporte ao Windows Dynamic Lighting: %1")
-                             .arg(hasSupport ? "Disponível" : "Não Disponível"));
-#else
-        supportLabel->setText("Suporte ao Windows Dynamic Lighting: Não Disponível (Não Windows)");
-#endif
-    });
-    
-    infoLayout->addWidget(supportLabel);
-    infoLayout->addWidget(versionLabel);
-    infoLayout->addWidget(refreshButton);
-    
-    mainLayout->addWidget(infoGroup);
+    // Inicializar informações do sistema
+    updateSystemInfo();
     
     // Initialize sync timer
     syncTimer = new QTimer(this);
@@ -360,8 +337,105 @@ void WindowsDynamicLightingSync::updateDeviceList()
         if (deviceCountLabel) {
             deviceCountLabel->setText(QString("Dispositivos detectados: %1").arg(deviceCount));
         }
+        
+        // Atualizar lista visual de dispositivos
+        updateDeviceListUI();
     } catch (...) {
         // Ignore errors
+    }
+}
+
+void WindowsDynamicLightingSync::updateDeviceListUI()
+{
+    if (!deviceListWidget || !RMPointer) {
+        return;
+    }
+    
+    // Limpar lista atual
+    QWidget* oldWidget = deviceListWidget->widget();
+    if (oldWidget) {
+        delete oldWidget;
+    }
+    
+    // Criar novo widget para a lista
+    QWidget* listWidget = new QWidget();
+    QVBoxLayout* listLayout = new QVBoxLayout(listWidget);
+    
+    try {
+        std::vector<RGBController*> controllers = RMPointer->GetRGBControllers();
+        
+        if (controllers.empty()) {
+            QLabel* noDevicesLabel = new QLabel("Nenhum dispositivo RGB detectado");
+            noDevicesLabel->setAlignment(Qt::AlignCenter);
+            noDevicesLabel->setStyleSheet("color: #666; font-style: italic; padding: 20px;");
+            listLayout->addWidget(noDevicesLabel);
+        } else {
+            for (size_t i = 0; i < controllers.size(); i++) {
+                RGBController* controller = controllers[i];
+                if (!controller) continue;
+                
+                // Criar frame para cada dispositivo
+                QFrame* deviceFrame = new QFrame();
+                deviceFrame->setFrameStyle(QFrame::Box);
+                deviceFrame->setStyleSheet("QFrame { border: 1px solid #ccc; border-radius: 5px; margin: 2px; padding: 5px; }");
+                
+                QVBoxLayout* deviceLayout = new QVBoxLayout(deviceFrame);
+                
+                // Nome do dispositivo
+                QLabel* nameLabel = new QLabel(QString::fromStdString(controller->name));
+                nameLabel->setStyleSheet("font-weight: bold; color: #333;");
+                
+                // Informações do dispositivo
+                QLabel* infoLabel = new QLabel(QString("Tipo: %1 | LEDs: %2 | Zonas: %3")
+                    .arg(QString::fromStdString(controller->type))
+                    .arg(controller->leds.size())
+                    .arg(controller->zones.size()));
+                infoLabel->setStyleSheet("color: #666; font-size: 11px;");
+                
+                // Status de compatibilidade
+                QLabel* statusLabel = new QLabel();
+                bool isCompatible = controller->colors.size() > 0;
+                if (isCompatible) {
+                    statusLabel->setText("✓ Compatível");
+                    statusLabel->setStyleSheet("color: #4CAF50; font-weight: bold;");
+                } else {
+                    statusLabel->setText("⚠ Limitado");
+                    statusLabel->setStyleSheet("color: #FF9800; font-weight: bold;");
+                }
+                
+                deviceLayout->addWidget(nameLabel);
+                deviceLayout->addWidget(infoLabel);
+                deviceLayout->addWidget(statusLabel);
+                
+                listLayout->addWidget(deviceFrame);
+            }
+        }
+    } catch (...) {
+        QLabel* errorLabel = new QLabel("Erro ao carregar dispositivos");
+        errorLabel->setAlignment(Qt::AlignCenter);
+        errorLabel->setStyleSheet("color: #f44336; font-style: italic; padding: 20px;");
+        listLayout->addWidget(errorLabel);
+    }
+    
+    listLayout->addStretch();
+    deviceListWidget->setWidget(listWidget);
+}
+
+void WindowsDynamicLightingSync::onBrightnessChanged(int value)
+{
+    brightness_multiplier = value / 100.0f; // Converter de 0-100 para 0.0-1.0
+    
+    // Atualizar label do valor
+    if (brightnessValueLabel) {
+        brightnessValueLabel->setText(QString("%1%").arg(value));
+    }
+    
+    // Salvar configurações
+    SaveSettings();
+    
+    // Aplicar nova configuração de brilho se estiver ativo
+    if (isDynamicLightingEnabled) {
+        applyLightingToAllDevices();
     }
 }
 
@@ -406,10 +480,22 @@ void WindowsDynamicLightingSync::applyLightingToAllDevices()
         {
             if (controller && controller->colors.size() > 0)
             {
-                // Aplicar cor a todos os LEDs
+                // Aplicar cor a todos os LEDs com multiplicador de brilho
                 for (unsigned int i = 0; i < controller->colors.size(); i++)
                 {
-                    controller->colors[i] = testColor;
+                    // Extrair componentes RGB da cor de teste
+                    unsigned char r = (testColor >> 16) & 0xFF;
+                    unsigned char g = (testColor >> 8) & 0xFF;
+                    unsigned char b = testColor & 0xFF;
+                    
+                    // Aplicar multiplicador de brilho
+                    r = static_cast<unsigned char>(r * brightness_multiplier);
+                    g = static_cast<unsigned char>(g * brightness_multiplier);
+                    b = static_cast<unsigned char>(b * brightness_multiplier);
+                    
+                    // Recompor a cor
+                    RGBColor adjustedColor = (r << 16) | (g << 8) | b;
+                    controller->colors[i] = adjustedColor;
                 }
                 
                 // Atualizar dispositivo
@@ -486,14 +572,14 @@ void WindowsDynamicLightingSync::OnSyncTimer()
 
 void WindowsDynamicLightingSync::OnDeviceAdded()
 {
-    this->LogInfo("Device added, refreshing device list");
-    RefreshDeviceList();
+    this->LogInfo("Device added, updating device list");
+    updateDeviceList();
 }
 
 void WindowsDynamicLightingSync::OnDeviceRemoved()
 {
-    this->LogInfo("Device removed, refreshing device list");
-    RefreshDeviceList();
+    this->LogInfo("Device removed, updating device list");
+    updateDeviceList();
 }
 
 // Settings management
@@ -515,11 +601,9 @@ void WindowsDynamicLightingSync::LoadSettings()
         
         sync_enabled = plugin_settings.value("sync_enabled", true);
         sync_interval_ms = plugin_settings.value("sync_interval_ms", 100);
-        auto_detect_devices = plugin_settings.value("auto_detect_devices", true);
-        logging_enabled = false; // Force disable logging
-        bidirectional_sync = plugin_settings.value("bidirectional_sync", true);
-        smooth_transitions = plugin_settings.value("smooth_transitions", true);
         brightness_multiplier = plugin_settings.value("brightness_multiplier", 1.0f);
+        // Funcionalidades removidas: bidirectional_sync, smooth_transitions, auto_detect_devices, logging_enabled
+        logging_enabled = false; // Force disable logging
         show_error_dialogs = false; // Force disable error dialogs
         max_log_file_size = plugin_settings.value("max_log_file_size", 10 * 1024 * 1024);
     } catch (...) {
@@ -544,11 +628,9 @@ void WindowsDynamicLightingSync::SaveSettings()
         json plugin_settings;
         plugin_settings["sync_enabled"] = sync_enabled;
         plugin_settings["sync_interval_ms"] = sync_interval_ms;
-        plugin_settings["auto_detect_devices"] = auto_detect_devices;
-        plugin_settings["enable_logging"] = false; // Force disable logging
-        plugin_settings["bidirectional_sync"] = bidirectional_sync;
-        plugin_settings["smooth_transitions"] = smooth_transitions;
         plugin_settings["brightness_multiplier"] = brightness_multiplier;
+        // Funcionalidades removidas: bidirectional_sync, smooth_transitions, auto_detect_devices
+        plugin_settings["enable_logging"] = false; // Force disable logging
         plugin_settings["show_error_dialogs"] = false; // Force disable error dialogs
         plugin_settings["max_log_file_size"] = max_log_file_size;
         
@@ -585,87 +667,92 @@ void WindowsDynamicLightingSync::CheckAndRotateLogFile()
     // Logging disabled to prevent crashes
 }
 
-// Device management
-void WindowsDynamicLightingSync::DetectCompatibleDevices()
+// System information update
+void WindowsDynamicLightingSync::updateSystemInfo()
 {
-    if (!RMPointer)
+    // Update OS information
+    if (osInfoLabel)
     {
-        LogError("ResourceManager not available for device detection");
-        return;
-    }
-    
-    LogInfo("Starting automatic device detection...");
-    
-    // Get current compatible controllers
-    std::vector<RGBController*> controllers = GetCompatibleControllers();
-    
-    // Update device count in UI
-    if (deviceCountLabel)
-    {
-        QString deviceText = QString("Dispositivos compatíveis: %1").arg(controllers.size());
-        deviceCountLabel->setText(deviceText);
-    }
-    
-    // Update status based on detection results
-    if (controllers.empty())
-    {
-        LogWarning("No compatible RGB devices found. Make sure your RGB devices are connected and recognized by OpenRGB.");
-        if (statusLabel)
+#ifdef _WIN32
+        OSVERSIONINFOEX osvi;
+        ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+        
+        QString osInfo = "OS: Windows ";
+        
+        // Get Windows version using GetVersionEx (deprecated but still works)
+        if (GetVersionEx((OSVERSIONINFO*)&osvi))
         {
-            statusLabel->setText("Nenhum dispositivo compatível encontrado");
+            osInfo += QString("%1.%2 Build %3")
+                .arg(osvi.dwMajorVersion)
+                .arg(osvi.dwMinorVersion)
+                .arg(osvi.dwBuildNumber);
         }
-    }
-    else
-    {
-        LogInfo("Device detection completed successfully. Found " + std::to_string(controllers.size()) + " compatible devices.");
-        if (statusLabel)
+        else
         {
-            statusLabel->setText(QString("Pronto - %1 dispositivos detectados").arg(controllers.size()));
+            osInfo += "(Versão não detectada)";
         }
         
-        // Log device details for troubleshooting
-        for (size_t i = 0; i < controllers.size(); ++i)
+        osInfoLabel->setText(osInfo);
+#else
+        osInfoLabel->setText("OS: Não Windows (Plugin não compatível)");
+#endif
+    }
+    
+    // Update compatibility information
+    if (compatibilityLabel)
+    {
+#ifdef _WIN32
+        bool isSupported = CheckDynamicLightingSupport();
+        QString compatText = "Compatibilidade com Windows Dynamic Lighting: ";
+        if (isSupported)
         {
-            RGBController* controller = controllers[i];
-            if (controller)
-            {
-                LogInfo(QString("Device %1: %2 (%3) - %4 LEDs, %5 modes")
-                    .arg(i + 1)
-                    .arg(QString::fromStdString(controller->name))
-                    .arg(QString::fromStdString(controller->name))
-                    .arg(controller->leds.size())
-                    .arg(controller->modes.size()).toStdString());
-            }
+            compatText += "✓ Suportado";
+        }
+        else
+        {
+            compatText += "✗ Não suportado (Windows 11 22H2+ necessário)";
+        }
+        compatibilityLabel->setText(compatText);
+#else
+        compatibilityLabel->setText("Compatibilidade com Windows Dynamic Lighting: ✗ Não Windows");
+#endif
+    }
+    
+    // Update API status
+    if (apiStatusLabel)
+    {
+#ifdef _WIN32
+        if (windowsLightingInitialized)
+        {
+            apiStatusLabel->setText("API Windows Dynamic Lighting: ✓ Conectado");
+        }
+        else
+        {
+            apiStatusLabel->setText("API Windows Dynamic Lighting: ✗ Não conectado");
+        }
+#else
+        apiStatusLabel->setText("API Windows Dynamic Lighting: ✗ Não disponível");
+#endif
+    }
+    
+    // Update system status
+    if (systemStatusLabel)
+    {
+        if (isDynamicLightingEnabled)
+        {
+            systemStatusLabel->setText("Status Windows Dynamic Lighting: ✓ Ativo");
+        }
+        else
+        {
+            systemStatusLabel->setText("Status Windows Dynamic Lighting: ○ Inativo");
         }
     }
 }
 
-void WindowsDynamicLightingSync::RefreshDeviceList()
-{
-    if (!auto_detect_devices)
-    {
-        LogInfo("Automatic device detection is disabled");
-        return;
-    }
-    
-    LogInfo("Refreshing device list...");
-    
-    // Perform device detection
-    DetectCompatibleDevices();
-    
-    // If Windows Dynamic Lighting is available, also refresh Windows devices
-#ifdef _WIN32
-    if (windowsLightingInitialized)
-    {
-        LogInfo("Refreshing Windows Dynamic Lighting devices...");
-        // The DeviceWatcher will automatically handle device changes
-        // but we can log current status
-        LogInfo("Windows Dynamic Lighting watcher is active");
-    }
-#endif
-    
-    LogInfo("Device list refresh completed");
-}
+// Device management - Simplified to only list OpenRGB devices
+// Removed: DetectCompatibleDevices() - OpenRGB handles device detection
+// Removed: RefreshDeviceList() - Unnecessary duplicate detection logic
 
 std::vector<RGBController*> WindowsDynamicLightingSync::GetCompatibleControllers()
 {
@@ -758,25 +845,8 @@ void WindowsDynamicLightingSync::UpdateDeviceColors()
     }
 }
 
-void WindowsDynamicLightingSync::SetAutoDetectDevices(bool enable)
-{
-    if (auto_detect_devices != enable)
-    {
-        auto_detect_devices = enable;
-        LogInfo("Auto-detect devices " + std::string(enable ? "enabled" : "disabled"));
-        
-        if (enable)
-        {
-            // Immediately perform detection when enabled
-            RefreshDeviceList();
-        }
-    }
-}
-
-bool WindowsDynamicLightingSync::IsAutoDetectEnabled() const
-{
-    return auto_detect_devices;
-}
+// Removed: SetAutoDetectDevices() and IsAutoDetectEnabled()
+// Device detection is now handled exclusively by OpenRGB
 
 #ifdef _WIN32
 void WindowsDynamicLightingSync::InitializeDynamicLighting()
