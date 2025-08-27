@@ -82,7 +82,7 @@ OpenRGBPluginInfo WindowsDynamicLightingSync::GetPluginInfo()
     info.Commit         = GIT_COMMIT_ID;
     info.URL            = "https://github.com/Oraculo-sh/OpenRGBWindowsDynamicLightingSyncPlugin";
     
-    info.Icon.load(":/WindowsDynamicLightingSync.png");
+    info.Icon.load(":/Assets/WindowsDynamicLightingSync128x128.png");
     
     info.Location       = OPENRGB_PLUGIN_LOCATION_TOP;
     info.Label          = "Dynamic Lighting";
