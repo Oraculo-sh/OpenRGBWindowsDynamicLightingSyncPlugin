@@ -158,6 +158,7 @@ private:
     bool                        sync_enabled;
     int                         sync_interval_ms;
     float                       brightness_multiplier;
+    bool                        ambientModeEnabled;
     bool                        logging_enabled;
     bool                        is_loaded;
     bool                        dark_theme_enabled;
@@ -221,6 +222,15 @@ private:
     // Color conversion methods
     RGBColor ConvertWindowsColorToRGB(const Windows::UI::Color& windowsColor);
     Windows::UI::Color ConvertRGBToWindowsColor(const RGBColor& rgbColor);
+    
+    // Virtual device management
+    void CreateVirtualLampArrayDevice();
+    void DestroyVirtualLampArrayDevice();
+    bool IsVirtualDeviceCreated() const;
+    
+    // Virtual device members
+    bool virtualDeviceCreated;
+    std::wstring virtualDeviceId;
 #endif
 };
 

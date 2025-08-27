@@ -52,6 +52,7 @@ WindowsDynamicLightingSync::WindowsDynamicLightingSync()
     , darkTheme(false)
 
     , brightness_multiplier(1.0f)
+    , ambientModeEnabled(false)
     , log_file_path("WindowsDynamicLightingSync.log")
     , show_error_dialogs(false)
     , max_log_file_size(10 * 1024 * 1024)
@@ -59,6 +60,8 @@ WindowsDynamicLightingSync::WindowsDynamicLightingSync()
     , lampArrayWatcher(nullptr)
     , lampArrays(nullptr)
     , windowsLightingInitialized(false)
+    , virtualDeviceCreated(false)
+    , virtualDeviceId(L"")
 #endif
 {
     // Plugin initialized without logging to prevent crashes
@@ -256,6 +259,7 @@ void WindowsDynamicLightingSync::setupUI()
     ambientModeCheckBox = new QCheckBox("Modo Iluminação Ambiente");
     ambientModeCheckBox->setChecked(false);
     connect(ambientModeCheckBox, &QCheckBox::toggled, [this](bool checked) {
+        ambientModeEnabled = checked;
         ambientControlsContainer->setEnabled(checked);
         EnableAmbientMode(checked);
         SaveSettings();
@@ -651,7 +655,7 @@ void WindowsDynamicLightingSync::OnSyncTimer()
 {
     QMutexLocker locker(&sync_mutex);
     
-    if (!is_loaded || !sync_enabled)
+    if (!is_loaded || !sync_enabled || ambientModeEnabled)
     {
         return;
     }
@@ -699,7 +703,7 @@ void WindowsDynamicLightingSync::LoadSettings()
         sync_enabled = plugin_settings.value("sync_enabled", true);
         sync_interval_ms = plugin_settings.value("sync_interval_ms", 100);
         brightness_multiplier = plugin_settings.value("brightness_multiplier", 1.0f);
-        bool ambient_mode_enabled = plugin_settings.value("ambient_mode_enabled", false);
+        ambientModeEnabled = plugin_settings.value("ambient_mode_enabled", false);
         // Funcionalidades removidas: bidirectional_sync, smooth_transitions, auto_detect_devices, logging_enabled
         logging_enabled = false; // Force disable logging
         show_error_dialogs = false; // Force disable error dialogs
@@ -707,9 +711,9 @@ void WindowsDynamicLightingSync::LoadSettings()
         
         // Aplicar configurações carregadas na UI
         if (ambientModeCheckBox) {
-            ambientModeCheckBox->setChecked(ambient_mode_enabled);
+            ambientModeCheckBox->setChecked(ambientModeEnabled);
             if (ambientControlsContainer) {
-                ambientControlsContainer->setEnabled(ambient_mode_enabled);
+                ambientControlsContainer->setEnabled(ambientModeEnabled);
             }
         }
     } catch (...) {
@@ -735,7 +739,7 @@ void WindowsDynamicLightingSync::SaveSettings()
         plugin_settings["sync_enabled"] = sync_enabled;
         plugin_settings["sync_interval_ms"] = sync_interval_ms;
         plugin_settings["brightness_multiplier"] = brightness_multiplier;
-        plugin_settings["ambient_mode_enabled"] = ambientModeCheckBox ? ambientModeCheckBox->isChecked() : false;
+        plugin_settings["ambient_mode_enabled"] = ambientModeEnabled;
         // Funcionalidades removidas: bidirectional_sync, smooth_transitions, auto_detect_devices
         plugin_settings["enable_logging"] = false; // Force disable logging
         plugin_settings["show_error_dialogs"] = false; // Force disable error dialogs
@@ -1150,9 +1154,6 @@ bool WindowsDynamicLightingSync::RegisterPluginAsDevice()
             return false;
         }
         
-        // Inicializar o Windows Dynamic Lighting
-        InitializeDynamicLighting();
-        
         // Verificar se a inicialização foi bem-sucedida
         if (!windowsLightingInitialized)
         {
@@ -1165,12 +1166,26 @@ bool WindowsDynamicLightingSync::RegisterPluginAsDevice()
             try
             {
                 // Os handlers já foram registrados na InitializeDynamicLighting
-                lampArrayWatcher.Start();
+                if (lampArrayWatcher.Status() == DeviceWatcherStatus::Created ||
+                    lampArrayWatcher.Status() == DeviceWatcherStatus::Stopped)
+                {
+                    lampArrayWatcher.Start();
+                }
             }
             catch (...)
             {
                 return false;
             }
+        }
+        
+        // Criar dispositivo virtual LampArray para representar o plugin
+        try
+        {
+            CreateVirtualLampArrayDevice();
+        }
+        catch (...)
+        {
+            // Continuar mesmo se a criação do dispositivo virtual falhar
         }
         
         return true;
@@ -1575,6 +1590,8 @@ void WindowsDynamicLightingSync::EnableAmbientMode(bool enable)
 {
     try
     {
+        ambientModeEnabled = enable;
+        
         if (enable)
         {
             // Parar sincronização regular se estiver ativa
@@ -1651,5 +1668,74 @@ void WindowsDynamicLightingSync::SyncWindowsToOpenRGB()
     {
         // Error during Windows to OpenRGB sync
     }
+}
+
+void WindowsDynamicLightingSync::CreateVirtualLampArrayDevice()
+{
+    try
+    {
+        if (virtualDeviceCreated)
+        {
+            return; // Dispositivo virtual já criado
+        }
+        
+        // Gerar ID único para o dispositivo virtual
+        virtualDeviceId = L"OpenRGB-DynamicLighting-Plugin-" + std::to_wstring(GetTickCount64());
+        
+        // O dispositivo virtual é registrado através do AppExtension no manifesto
+        // Aqui apenas marcamos como criado para controle interno
+        virtualDeviceCreated = true;
+        
+        // Log da criação do dispositivo virtual
+        if (RMPointer)
+        {
+            RMPointer->GetLogManager()->LogMessage(LOG_INFO, 
+                "[Windows Dynamic Lighting Sync] Virtual LampArray device created");
+        }
+    }
+    catch (...)
+    {
+        virtualDeviceCreated = false;
+        if (RMPointer)
+        {
+            RMPointer->GetLogManager()->LogMessage(LOG_ERROR, 
+                "[Windows Dynamic Lighting Sync] Failed to create virtual LampArray device");
+        }
+    }
+}
+
+void WindowsDynamicLightingSync::DestroyVirtualLampArrayDevice()
+{
+    try
+    {
+        if (!virtualDeviceCreated)
+        {
+            return; // Dispositivo virtual não existe
+        }
+        
+        // Limpar recursos do dispositivo virtual
+        virtualDeviceId.clear();
+        virtualDeviceCreated = false;
+        
+        // Log da destruição do dispositivo virtual
+        if (RMPointer)
+        {
+            RMPointer->GetLogManager()->LogMessage(LOG_INFO, 
+                "[Windows Dynamic Lighting Sync] Virtual LampArray device destroyed");
+        }
+    }
+    catch (...)
+    {
+        if (RMPointer)
+        {
+            RMPointer->GetLogManager()->LogMessage(LOG_ERROR, 
+                "[Windows Dynamic Lighting Sync] Failed to destroy virtual LampArray device");
+        }
+    }
+}
+
+bool WindowsDynamicLightingSync::IsVirtualDeviceCreated() const
+{
+    return virtualDeviceCreated;
 }
 #endif
