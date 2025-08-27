@@ -15,7 +15,6 @@ test_moc2.cpp
 test_moc3.cpp
 *.obj
 *.res
-*.manifest
 
 # Sample Sample Plugin
 *.pro.user*
