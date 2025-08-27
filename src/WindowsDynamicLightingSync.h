@@ -2,31 +2,35 @@
 #define WINDOWSDYNAMICLIGHTINGSYNC_H
 
 #include "OpenRGBPluginInterface.h"
-#include "ResourceManager.h"
+#include "ResourceManagerInterface.h"
 #include "RGBController.h"
-#include "LogManager.h"
 #include "SettingsManager.h"
-#include <QObject>
-#include <QWidget>
-#include <QMenu>
-#include <QTimer>
-#include <QThread>
-#include <QMutex>
 
-// Define GIT_COMMIT_ID if not defined by build system
-#ifndef GIT_COMMIT_ID
-#define GIT_COMMIT_ID "unknown"
-#endif
+#include <QObject>
+
+using json = nlohmann::json;
+#include <QString>
+#include <QtPlugin>
+#include <QWidget>
+#include <QTimer>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
 #include <QCheckBox>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
 #include <QGroupBox>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
 #include <QSlider>
 #include <QScrollArea>
+#include <QMutex>
+#include <QMenu>
 #include <vector>
 #include <memory>
 #include <algorithm>
@@ -37,22 +41,14 @@
 #include <fstream>
 #include <sstream>
 #include <functional>
-#include <chrono>
 #include <iomanip>
 #include <cstdio>
+#include <cmath>
+#include <limits>
 
-// RGB Color macros (from OpenRGB)
-#ifndef RGBGetRValue
-#define RGBGetRValue(rgb)      ((unsigned char)(rgb))
-#endif
-#ifndef RGBGetGValue
-#define RGBGetGValue(rgb)      ((unsigned char)(((unsigned short)(rgb)) >> 8))
-#endif
-#ifndef RGBGetBValue
-#define RGBGetBValue(rgb)      ((unsigned char)((rgb) >> 16))
-#endif
-#ifndef ToRGBColor
-#define ToRGBColor(r,g,b)      ((RGBColor)(((unsigned char)(r)|((unsigned short)((unsigned char)(g))<<8))|(((unsigned long)(unsigned char)(b))<<16)))
+// Define GIT_COMMIT_ID if not defined by build system
+#ifndef GIT_COMMIT_ID
+#define GIT_COMMIT_ID "unknown"
 #endif
 
 #ifdef _WIN32
@@ -66,6 +62,7 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Devices.Lights.h>
 #include <winrt/Windows.Devices.Lights.Effects.h>
+#include <winrt/Windows.UI.h>
 using namespace winrt;
 using namespace Windows::Foundation;
 using namespace Windows::Foundation::Collections;
@@ -87,10 +84,12 @@ public:
     // OpenRGBPluginInterface methods
     OpenRGBPluginInfo   GetPluginInfo() override;
     unsigned int        GetPluginAPIVersion() override;
-    void                        Load(ResourceManagerInterface* resource_manager_ptr) override;
+    void                Load(ResourceManagerInterface* resource_manager_ptr) override;
     QWidget*            GetWidget() override;
     QMenu*              GetTrayMenu() override;
     void                Unload() override;
+
+    static ResourceManagerInterface* RMPointer;
 
 private slots:
     void OnSyncTimer();
@@ -146,12 +145,9 @@ private:
     QTimer*                     sync_timer;
     QMutex                      sync_mutex;
     
-    ResourceManagerInterface*   RMPointer;
+    // ResourceManagerInterface is now static
     bool                        isDynamicLightingEnabled;
     bool                        darkTheme;
-    RGBColor                    testColor;
-    
-
     
     // Sync configuration
     bool                        sync_enabled;
@@ -212,7 +208,9 @@ private:
     // Advanced sync methods
     void SyncOpenRGBToWindows();
     void SyncWindowsToOpenRGB();
-    RGBColor ConvertWindowsColorToRGB(const Windows::UI::Color& winColor);
+    
+    // Color conversion methods
+    RGBColor ConvertWindowsColorToRGB(const Windows::UI::Color& windowsColor);
     Windows::UI::Color ConvertRGBToWindowsColor(const RGBColor& rgbColor);
 #endif
 };

@@ -12,7 +12,28 @@
 #include <QGroupBox>
 #include <QMenu>
 #include <QAction>
+#include <QSlider>
+#include <QTime>
 #include "json.hpp"
+
+#ifdef _WIN32
+#include <windows.h>
+#include <winrt/base.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Devices.h>
+#include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Devices.Lights.h>
+#include <winrt/Windows.UI.h>
+using namespace winrt;
+using namespace Windows::Foundation;
+using namespace Windows::Devices;
+using namespace Windows::Devices::Enumeration;
+using namespace Windows::Devices::Lights;
+using namespace Windows::UI;
+#endif
+
+
 
 using namespace std::chrono;
 
@@ -27,10 +48,9 @@ WindowsDynamicLightingSync::WindowsDynamicLightingSync()
     , enableCheckBox(nullptr)
     , deviceCountLabel(nullptr)
     , syncTimer(nullptr)
-    , RMPointer(nullptr)
     , isDynamicLightingEnabled(false)
     , darkTheme(false)
-    , testColor(0x00FF0000)
+
     , brightness_multiplier(1.0f)
     , log_file_path("WindowsDynamicLightingSync.log")
     , show_error_dialogs(false)
@@ -75,6 +95,9 @@ unsigned int WindowsDynamicLightingSync::GetPluginAPIVersion()
 {
     return OPENRGB_PLUGIN_API_VERSION;
 }
+
+// Static member definition
+ResourceManagerInterface* WindowsDynamicLightingSync::RMPointer = nullptr;
 
 void WindowsDynamicLightingSync::Load(ResourceManagerInterface* resource_manager_ptr)
 {
@@ -473,10 +496,10 @@ void WindowsDynamicLightingSync::applyLightingToAllDevices()
                 // Aplicar cor a todos os LEDs com multiplicador de brilho
                 for (unsigned int i = 0; i < controller->colors.size(); i++)
                 {
-                    // Extrair componentes RGB da cor de teste
-                    unsigned char r = (testColor >> 16) & 0xFF;
-                    unsigned char g = (testColor >> 8) & 0xFF;
-                    unsigned char b = testColor & 0xFF;
+                    // Usar cor vermelha como padrão para teste
+                    unsigned char r = 255;
+                    unsigned char g = 0;
+                    unsigned char b = 0;
                     
                     // Aplicar multiplicador de brilho
                     r = static_cast<unsigned char>(r * brightness_multiplier);
@@ -885,6 +908,7 @@ void WindowsDynamicLightingSync::SyncWithDynamicLighting()
         }
         
         // Perform bidirectional sync based on configuration
+        if (true) // TODO: Add proper condition for bidirectional sync
         {
             // Sync OpenRGB colors to Windows Dynamic Lighting
             SyncOpenRGBToWindows();
