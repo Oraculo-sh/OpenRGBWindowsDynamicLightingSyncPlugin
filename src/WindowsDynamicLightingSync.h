@@ -106,6 +106,7 @@ private:
     void                setupUI();
     void                enableDynamicLighting(bool enable);
     void                applyLightingToAllDevices();
+    QWidget*            createDeviceWidget(RGBController* controller, int index);
 #ifdef _WIN32
     void                initializeWindowsLighting();
     void                cleanupWindowsLighting();
@@ -131,7 +132,11 @@ private:
     QVBoxLayout*                deviceListLayout;
     
     // Configurações
-    QCheckBox*                  brightnessControlCheckBox;
+    QSpinBox*                   syncIntervalSpinBox;
+    QCheckBox*                  enableBrightnessCheckBox;
+    QWidget*                    brightnessContainer;
+    QCheckBox*                  ambientModeCheckBox;
+    QWidget*                    ambientControlsContainer;
     QSlider*                    brightnessSlider;
     QLabel*                     brightnessValueLabel;
     
@@ -208,6 +213,10 @@ private:
     // Advanced sync methods
     void SyncOpenRGBToWindows();
     void SyncWindowsToOpenRGB();
+    
+    // Métodos de iluminação ambiente
+    void ApplyAmbientLighting();
+    void EnableAmbientMode(bool enable);
     
     // Color conversion methods
     RGBColor ConvertWindowsColorToRGB(const Windows::UI::Color& windowsColor);

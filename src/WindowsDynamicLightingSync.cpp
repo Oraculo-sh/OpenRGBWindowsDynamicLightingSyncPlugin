@@ -172,6 +172,12 @@ void WindowsDynamicLightingSync::setupUI()
     deviceCountLabel = new QLabel("Dispositivos detectados: 0");
     devicesLayout->addWidget(deviceCountLabel);
     
+    // Separador
+    QFrame* deviceSeparator = new QFrame();
+    deviceSeparator->setFrameShape(QFrame::HLine);
+    deviceSeparator->setFrameShadow(QFrame::Sunken);
+    devicesLayout->addWidget(deviceSeparator);
+    
     // Container para lista de dispositivos
     deviceListWidget = new QWidget();
     deviceListLayout = new QVBoxLayout(deviceListWidget);
@@ -191,11 +197,11 @@ void WindowsDynamicLightingSync::setupUI()
     // Configuração de intervalo de sincronização
     QHBoxLayout* intervalLayout = new QHBoxLayout();
     QLabel* intervalLabel = new QLabel("Intervalo de Sincronização (ms):");
-    QSpinBox* intervalSpinBox = new QSpinBox();
-    intervalSpinBox->setRange(50, 5000);
-    intervalSpinBox->setValue(sync_interval_ms);
-    intervalSpinBox->setSuffix(" ms");
-    connect(intervalSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value) {
+    syncIntervalSpinBox = new QSpinBox();
+    syncIntervalSpinBox->setRange(50, 5000);
+    syncIntervalSpinBox->setValue(sync_interval_ms);
+    syncIntervalSpinBox->setSuffix(" ms");
+    connect(syncIntervalSpinBox, QOverload<int>::of(&QSpinBox::valueChanged), [this](int value) {
         sync_interval_ms = value;
         if (syncTimer && syncTimer->isActive()) {
             syncTimer->setInterval(value);
@@ -203,23 +209,24 @@ void WindowsDynamicLightingSync::setupUI()
         SaveSettings();
     });
     intervalLayout->addWidget(intervalLabel);
-    intervalLayout->addWidget(intervalSpinBox);
+    intervalLayout->addWidget(syncIntervalSpinBox);
     
     // Controle de brilho
-    brightnessControlCheckBox = new QCheckBox("Habilitar controle de brilho");
-    brightnessControlCheckBox->setChecked(false);
+    enableBrightnessCheckBox = new QCheckBox("Habilitar controle de brilho");
+    enableBrightnessCheckBox->setChecked(false);
     
-    QHBoxLayout* brightnessLayout = new QHBoxLayout();
+    // Container para slider de brilho
+    brightnessContainer = new QWidget();
+    QHBoxLayout* brightnessLayout = new QHBoxLayout(brightnessContainer);
     QLabel* brightnessLabel = new QLabel("Substituir Brilho:");
     brightnessSlider = new QSlider(Qt::Horizontal);
     brightnessSlider->setRange(0, 20); // 0.0 to 2.0 with 0.1 steps
     brightnessSlider->setValue(10); // 1.0 default
-    brightnessSlider->setEnabled(false);
     
     brightnessValueLabel = new QLabel("1.0");
     
-    connect(brightnessControlCheckBox, &QCheckBox::toggled, [this](bool checked) {
-        brightnessSlider->setEnabled(checked);
+    connect(enableBrightnessCheckBox, &QCheckBox::toggled, [this](bool checked) {
+        brightnessContainer->setEnabled(checked);
         SaveSettings();
     });
     
@@ -233,10 +240,57 @@ void WindowsDynamicLightingSync::setupUI()
     brightnessLayout->addWidget(brightnessLabel);
     brightnessLayout->addWidget(brightnessSlider);
     brightnessLayout->addWidget(brightnessValueLabel);
+    brightnessContainer->setEnabled(false); // Inicialmente desabilitado
     
     configLayout->addLayout(intervalLayout);
-    configLayout->addWidget(brightnessControlCheckBox);
-    configLayout->addLayout(brightnessLayout);
+    configLayout->addWidget(enableBrightnessCheckBox);
+    configLayout->addWidget(brightnessContainer);
+    
+    // Separador
+    QFrame* separator2 = new QFrame();
+    separator2->setFrameShape(QFrame::HLine);
+    separator2->setFrameShadow(QFrame::Sunken);
+    configLayout->addWidget(separator2);
+    
+    // Modo Ambiente
+    ambientModeCheckBox = new QCheckBox("Modo Iluminação Ambiente");
+    ambientModeCheckBox->setChecked(false);
+    connect(ambientModeCheckBox, &QCheckBox::toggled, [this](bool checked) {
+        ambientControlsContainer->setEnabled(checked);
+        EnableAmbientMode(checked);
+        SaveSettings();
+    });
+    configLayout->addWidget(ambientModeCheckBox);
+    
+    ambientControlsContainer = new QWidget();
+    QVBoxLayout* ambientControlsLayout = new QVBoxLayout(ambientControlsContainer);
+    ambientControlsLayout->setContentsMargins(20, 0, 0, 0); // Indentação
+    
+    QHBoxLayout* ambientButtonsLayout = new QHBoxLayout();
+    
+    QPushButton* applyAmbientButton = new QPushButton("Aplicar Ambiente");
+    connect(applyAmbientButton, &QPushButton::clicked, [this]() {
+        if (ambientModeCheckBox->isChecked()) {
+            ApplyAmbientLighting();
+        }
+    });
+    ambientButtonsLayout->addWidget(applyAmbientButton);
+    
+    QPushButton* resetAmbientButton = new QPushButton("Resetar");
+    connect(resetAmbientButton, &QPushButton::clicked, [this]() {
+        ambientModeCheckBox->setChecked(false);
+        EnableAmbientMode(false);
+    });
+    ambientButtonsLayout->addWidget(resetAmbientButton);
+    
+    ambientControlsLayout->addLayout(ambientButtonsLayout);
+    
+    QLabel* ambientInfo = new QLabel("Aplica cores ambiente suaves quando habilitado.");
+    ambientInfo->setStyleSheet("color: gray; font-size: 10px;");
+    ambientControlsLayout->addWidget(ambientInfo);
+    
+    ambientControlsContainer->setEnabled(false);
+    configLayout->addWidget(ambientControlsContainer);
     
     mainLayout->addWidget(configGroup);
     
@@ -357,6 +411,67 @@ void WindowsDynamicLightingSync::updateDeviceList()
     }
 }
 
+QWidget* WindowsDynamicLightingSync::createDeviceWidget(RGBController* controller, int index)
+{
+    QWidget* deviceWidget = new QWidget();
+    QVBoxLayout* mainLayout = new QVBoxLayout(deviceWidget);
+    
+    // Nome do dispositivo
+    QLabel* nameLabel = new QLabel(QString("<b>%1</b>").arg(QString::fromStdString(controller->name)));
+    mainLayout->addWidget(nameLabel);
+    
+    // Layout horizontal para controles
+    QHBoxLayout* controlsLayout = new QHBoxLayout();
+    
+    // Checkbox para habilitar sync
+    QCheckBox* syncCheckBox = new QCheckBox("Habilitar Sync");
+    syncCheckBox->setChecked(true);
+    controlsLayout->addWidget(syncCheckBox);
+    
+    // Separador
+    QLabel* separator1 = new QLabel(" | ");
+    controlsLayout->addWidget(separator1);
+    
+    // Type selector
+    QLabel* typeLabel = new QLabel("Type:");
+    controlsLayout->addWidget(typeLabel);
+    QComboBox* typeComboBox = new QComboBox();
+    typeComboBox->addItems({"Single", "Dual"});
+    controlsLayout->addWidget(typeComboBox);
+    
+    // Separador
+    QLabel* separator2 = new QLabel(" | ");
+    controlsLayout->addWidget(separator2);
+    
+    // Mode selector
+    QLabel* modeLabel = new QLabel("Mode:");
+    controlsLayout->addWidget(modeLabel);
+    QComboBox* modeComboBox = new QComboBox();
+    modeComboBox->addItems({"Direct", "Static", "Custom"});
+    controlsLayout->addWidget(modeComboBox);
+    
+    controlsLayout->addStretch();
+    mainLayout->addLayout(controlsLayout);
+    
+    // Conectar sinais
+    connect(syncCheckBox, &QCheckBox::toggled, [this, index](bool checked) {
+        // Implementar lógica de sync por dispositivo
+        SaveSettings();
+    });
+    
+    connect(typeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), [this, index](int typeIndex) {
+        // Implementar lógica de tipo
+        SaveSettings();
+    });
+    
+    connect(modeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), [this, index](int modeIndex) {
+        // Implementar lógica de modo
+        SaveSettings();
+    });
+    
+    return deviceWidget;
+}
+
 void WindowsDynamicLightingSync::updateDeviceListUI()
 {
     if (!deviceListWidget || !RMPointer) {
@@ -388,40 +503,9 @@ void WindowsDynamicLightingSync::updateDeviceListUI()
                 RGBController* controller = controllers[i];
                 if (!controller) continue;
                 
-                // Criar frame para cada dispositivo
-                QFrame* deviceFrame = new QFrame();
-                deviceFrame->setFrameStyle(QFrame::Box);
-                deviceFrame->setStyleSheet("QFrame { border: 1px solid #ccc; border-radius: 5px; margin: 2px; padding: 5px; }");
-                
-                QVBoxLayout* deviceLayout = new QVBoxLayout(deviceFrame);
-                
-                // Nome do dispositivo
-                QLabel* nameLabel = new QLabel(QString::fromStdString(controller->name));
-                nameLabel->setStyleSheet("font-weight: bold; color: #333;");
-                
-                // Informações do dispositivo
-                QLabel* infoLabel = new QLabel(QString("Tipo: %1 | LEDs: %2 | Zonas: %3")
-                    .arg(QString::fromStdString(controller->name))
-                    .arg(controller->leds.size())
-                    .arg(controller->zones.size()));
-                infoLabel->setStyleSheet("color: #666; font-size: 11px;");
-                
-                // Status de compatibilidade
-                QLabel* statusLabel = new QLabel();
-                bool isCompatible = controller->colors.size() > 0;
-                if (isCompatible) {
-                    statusLabel->setText("✓ Compatível");
-                    statusLabel->setStyleSheet("color: #4CAF50; font-weight: bold;");
-                } else {
-                    statusLabel->setText("⚠ Limitado");
-                    statusLabel->setStyleSheet("color: #FF9800; font-weight: bold;");
-                }
-                
-                deviceLayout->addWidget(nameLabel);
-                deviceLayout->addWidget(infoLabel);
-                deviceLayout->addWidget(statusLabel);
-                
-                listLayout->addWidget(deviceFrame);
+                // Usar a nova função para criar widget do dispositivo
+                QWidget* deviceWidget = createDeviceWidget(controller, i);
+                listLayout->addWidget(deviceWidget);
             }
         }
     } catch (...) {
@@ -615,10 +699,19 @@ void WindowsDynamicLightingSync::LoadSettings()
         sync_enabled = plugin_settings.value("sync_enabled", true);
         sync_interval_ms = plugin_settings.value("sync_interval_ms", 100);
         brightness_multiplier = plugin_settings.value("brightness_multiplier", 1.0f);
+        bool ambient_mode_enabled = plugin_settings.value("ambient_mode_enabled", false);
         // Funcionalidades removidas: bidirectional_sync, smooth_transitions, auto_detect_devices, logging_enabled
         logging_enabled = false; // Force disable logging
         show_error_dialogs = false; // Force disable error dialogs
         max_log_file_size = plugin_settings.value("max_log_file_size", 10 * 1024 * 1024);
+        
+        // Aplicar configurações carregadas na UI
+        if (ambientModeCheckBox) {
+            ambientModeCheckBox->setChecked(ambient_mode_enabled);
+            if (ambientControlsContainer) {
+                ambientControlsContainer->setEnabled(ambient_mode_enabled);
+            }
+        }
     } catch (...) {
         // Use defaults if loading fails
     }
@@ -642,6 +735,7 @@ void WindowsDynamicLightingSync::SaveSettings()
         plugin_settings["sync_enabled"] = sync_enabled;
         plugin_settings["sync_interval_ms"] = sync_interval_ms;
         plugin_settings["brightness_multiplier"] = brightness_multiplier;
+        plugin_settings["ambient_mode_enabled"] = ambientModeCheckBox ? ambientModeCheckBox->isChecked() : false;
         // Funcionalidades removidas: bidirectional_sync, smooth_transitions, auto_detect_devices
         plugin_settings["enable_logging"] = false; // Force disable logging
         plugin_settings["show_error_dialogs"] = false; // Force disable error dialogs
@@ -663,19 +757,55 @@ void WindowsDynamicLightingSync::updateSystemInfo()
     if (osInfoLabel)
     {
 #ifdef _WIN32
-        OSVERSIONINFOEX osvi;
-        ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
-        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
-        
         QString osInfo = "OS: Windows ";
         
-        // Get Windows version using GetVersionEx (deprecated but still works)
-        if (GetVersionEx((OSVERSIONINFO*)&osvi))
+        // Get Windows version using RtlGetVersion (more reliable than GetVersionEx)
+        typedef NTSTATUS(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
+        HMODULE hMod = GetModuleHandle(TEXT("ntdll.dll"));
+        if (hMod)
         {
-            osInfo += QString("%1.%2 Build %3")
-                .arg(osvi.dwMajorVersion)
-                .arg(osvi.dwMinorVersion)
-                .arg(osvi.dwBuildNumber);
+            RtlGetVersionPtr fxPtr = (RtlGetVersionPtr)GetProcAddress(hMod, "RtlGetVersion");
+            if (fxPtr != nullptr)
+            {
+                RTL_OSVERSIONINFOW rovi = { 0 };
+                rovi.dwOSVersionInfoSize = sizeof(rovi);
+                if (fxPtr(&rovi) == 0)
+                {
+                    // Determine Windows version based on build number
+                    QString versionName;
+                    if (rovi.dwMajorVersion == 10)
+                    {
+                        if (rovi.dwBuildNumber >= 22000)
+                        {
+                            versionName = "11";
+                        }
+                        else
+                        {
+                            versionName = "10";
+                        }
+                    }
+                    else if (rovi.dwMajorVersion > 10)
+                    {
+                        versionName = QString::number(rovi.dwMajorVersion);
+                    }
+                    else
+                    {
+                        versionName = QString("%1.%2").arg(rovi.dwMajorVersion).arg(rovi.dwMinorVersion);
+                    }
+                    
+                    osInfo += QString("%1 (Build %2)")
+                        .arg(versionName)
+                        .arg(rovi.dwBuildNumber);
+                }
+                else
+                {
+                    osInfo += "(Versão não detectada)";
+                }
+            }
+            else
+            {
+                osInfo += "(Versão não detectada)";
+            }
         }
         else
         {
@@ -845,36 +975,42 @@ void WindowsDynamicLightingSync::InitializeDynamicLighting()
         // Initializing Windows Dynamic Lighting API
         
         // Initialize Windows Runtime
-        winrt::init_apartment();
+        winrt::init_apartment(winrt::apartment_type::single_threaded);
         
         // Check if Dynamic Lighting is supported
         if (!CheckDynamicLightingSupport())
         {
-            // Windows Dynamic Lighting is not supported on this system
+            windowsLightingInitialized = false;
             return;
         }
         
-        // Criar seletor para dispositivos LampArray
-        hstring lampArraySelector = LampArray::GetDeviceSelector();
+        // Create selector for LampArray devices
+        winrt::hstring lampArraySelector = LampArray::GetDeviceSelector();
         
-        // Criar DeviceWatcher para monitorar dispositivos LampArray
+        // Create DeviceWatcher to monitor LampArray devices
         lampArrayWatcher = DeviceInformation::CreateWatcher(lampArraySelector);
         
-        // Configurar eventos do watcher
+        // Configure watcher events
         lampArrayWatcher.Added({ this, &WindowsDynamicLightingSync::onLampArrayAdded });
         lampArrayWatcher.Removed({ this, &WindowsDynamicLightingSync::onLampArrayRemoved });
         
-        // Iniciar monitoramento
+        // Start monitoring
         lampArrayWatcher.Start();
         
+        // Register plugin as a lighting device
+        RegisterPluginAsDevice();
+        
         windowsLightingInitialized = true;
-        // Windows Dynamic Lighting API initialized successfully
+    }
+    catch (winrt::hresult_error const& ex)
+    {
+        // WinRT specific error handling
+        windowsLightingInitialized = false;
     }
     catch (...)
     {
-        // Falha na inicialização - continuar sem Windows Dynamic Lighting
+        // General error handling
         windowsLightingInitialized = false;
-        // Failed to initialize Windows Dynamic Lighting
     }
 }
 
@@ -882,18 +1018,62 @@ bool WindowsDynamicLightingSync::CheckDynamicLightingSupport()
 {
     try
     {
-        // Check Windows version and Dynamic Lighting support
-        // This is a placeholder - actual implementation would check:
-        // - Windows 11 version
-        // - Dynamic Lighting capability
-        // - Available LampArray devices
+        // Check Windows version first
+        OSVERSIONINFOEX osvi;
+        ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
+        osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
         
-        // Checking Dynamic Lighting support
-        return true; // Placeholder
+        // Get version info using RtlGetVersion (more reliable than GetVersionEx)
+        typedef NTSTATUS(WINAPI* RtlGetVersionPtr)(PRTL_OSVERSIONINFOW);
+        HMODULE hMod = GetModuleHandle(TEXT("ntdll.dll"));
+        if (hMod)
+        {
+            RtlGetVersionPtr fxPtr = (RtlGetVersionPtr)GetProcAddress(hMod, "RtlGetVersion");
+            if (fxPtr != nullptr)
+            {
+                RTL_OSVERSIONINFOW rovi = { 0 };
+                rovi.dwOSVersionInfoSize = sizeof(rovi);
+                if (fxPtr(&rovi) == 0)
+                {
+                    // Check for Windows 11 (build 22000+) or Windows 10 with Dynamic Lighting support
+                    if (rovi.dwMajorVersion >= 10)
+                    {
+                        if (rovi.dwMajorVersion > 10 || rovi.dwBuildNumber >= 22000)
+                        {
+                            // Windows 11 or later - Dynamic Lighting supported
+                            try
+                            {
+                                // Test if we can access the LampArray API
+                                winrt::hstring selector = LampArray::GetDeviceSelector();
+                                return true;
+                            }
+                            catch (...)
+                            {
+                                return false;
+                            }
+                        }
+                        else if (rovi.dwBuildNumber >= 19041)
+                        {
+                            // Windows 10 version 2004+ - Limited Dynamic Lighting support
+                            try
+                            {
+                                winrt::hstring selector = LampArray::GetDeviceSelector();
+                                return true;
+                            }
+                            catch (...)
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        return false;
     }
     catch (...)
     {
-        // Error checking Dynamic Lighting support
         return false;
     }
 }
@@ -962,24 +1142,41 @@ bool WindowsDynamicLightingSync::RegisterPluginAsDevice()
 {
     try
     {
-        // Register this plugin as a device in the Windows Dynamic Lighting API
-        // This allows the plugin to be recognized as a lighting device by the system
+        // O registro do plugin como dispositivo LampArray é feito através do AppExtension
+        // definido no AppxManifest.xml com a extensão "com.microsoft.windows.lighting"
         
+        if (!CheckDynamicLightingSupport())
+        {
+            return false;
+        }
+        
+        // Inicializar o Windows Dynamic Lighting
+        InitializeDynamicLighting();
+        
+        // Verificar se a inicialização foi bem-sucedida
         if (!windowsLightingInitialized)
         {
             return false;
         }
         
-        // Create device registration information
-        // Note: This is a simplified implementation - actual Windows Dynamic Lighting
-        // device registration may require additional WinRT API calls
+        // Registrar handlers para eventos de dispositivos
+        if (lampArrayWatcher)
+        {
+            try
+            {
+                // Os handlers já foram registrados na InitializeDynamicLighting
+                lampArrayWatcher.Start();
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
         
-        // Plugin successfully registered as device
         return true;
     }
     catch (...)
     {
-        // Failed to register plugin as device
         return false;
     }
 }
@@ -988,19 +1185,24 @@ void WindowsDynamicLightingSync::UnregisterPluginAsDevice()
 {
     try
     {
-        // Unregister this plugin from the Windows Dynamic Lighting API
-        // This removes the plugin from being recognized as a lighting device
-        
-        if (!windowsLightingInitialized)
+        // Parar o watcher de dispositivos
+        if (lampArrayWatcher)
         {
-            return;
+            try
+            {
+                lampArrayWatcher.Stop();
+            }
+            catch (...)
+            {
+                // Ignorar erros ao parar o watcher
+            }
         }
         
-        // Perform device unregistration
-        // Note: This is a simplified implementation - actual Windows Dynamic Lighting
-        // device unregistration may require additional WinRT API calls
+        // Limpar arrays conectados
+        connectedLampArrays.clear();
         
-        // Plugin successfully unregistered as device
+        // Limpeza dos recursos do Dynamic Lighting
+        CleanupDynamicLighting();
     }
     catch (...)
     {
@@ -1012,23 +1214,38 @@ void WindowsDynamicLightingSync::onLampArrayAdded(DeviceWatcher const& sender, D
 {
     try
     {
-        // Obter LampArray do dispositivo
-        auto lampArrayAsync = LampArray::FromIdAsync(deviceInfo.Id());
-        auto lampArray = lampArrayAsync.get();
+        // Get LampArray from device asynchronously
+        auto lampArrayOperation = LampArray::FromIdAsync(deviceInfo.Id());
         
-        if (lampArray != nullptr)
+        // Wait for the async operation to complete
+        lampArrayOperation.Completed([this, deviceInfo](auto const& asyncOp, auto const& status)
         {
-            connectedLampArrays.push_back(lampArray);
-            
-            // Atualizar UI na thread principal
-            QMetaObject::invokeMethod(this, [this]() {
-                updateDeviceList();
-            }, Qt::QueuedConnection);
-        }
+            if (status == AsyncStatus::Completed)
+            {
+                try
+                {
+                    auto lampArray = asyncOp.GetResults();
+                    if (lampArray != nullptr && lampArray.IsAvailable())
+                    {
+                        // Add to connected devices
+                        connectedLampArrays.push_back(lampArray);
+                        
+                        // Update UI on main thread
+                        QMetaObject::invokeMethod(this, [this]() {
+                            updateDeviceList();
+                        }, Qt::QueuedConnection);
+                    }
+                }
+                catch (...)
+                {
+                    // Ignore errors when adding individual devices
+                }
+            }
+        });
     }
     catch (...)
     {
-        // Ignorar erros ao adicionar dispositivo
+        // Ignore errors when adding devices
     }
 }
 
@@ -1036,26 +1253,34 @@ void WindowsDynamicLightingSync::onLampArrayRemoved(DeviceWatcher const& sender,
 {
     try
     {
-        // Remover dispositivo da lista
+        // Remove device from list
         auto it = std::remove_if(connectedLampArrays.begin(), connectedLampArrays.end(),
             [&deviceInfoUpdate](const LampArray& lampArray) {
-                return lampArray.DeviceId() == deviceInfoUpdate.Id();
+                try
+                {
+                    return lampArray.DeviceId() == deviceInfoUpdate.Id();
+                }
+                catch (...)
+                {
+                    // If we can't access DeviceId, assume it's the device being removed
+                    return true;
+                }
             });
         
         if (it != connectedLampArrays.end())
         {
             connectedLampArrays.erase(it, connectedLampArrays.end());
             
-            // Atualizar UI na thread principal
+            // Update UI on main thread
             QMetaObject::invokeMethod(this, [this]() {
                 updateDeviceList();
             }, Qt::QueuedConnection);
         }
     }
     catch (...)
-     {
-         // Ignorar erros ao remover dispositivo
-     }
+    {
+        // Ignore errors when removing devices
+    }
 }
 
 void WindowsDynamicLightingSync::syncWithWindowsLighting()
@@ -1280,6 +1505,99 @@ void WindowsDynamicLightingSync::SyncOpenRGBToWindows()
     catch (...)
     {
         // Error during OpenRGB to Windows sync
+    }
+}
+
+void WindowsDynamicLightingSync::ApplyAmbientLighting()
+{
+    try
+    {
+        if (connectedLampArrays.empty())
+        {
+            return;
+        }
+        
+        // Cores ambiente padrão (gradiente suave)
+        std::vector<Windows::UI::Color> ambientColors = {
+            Windows::UI::ColorHelper::FromArgb(255, 64, 32, 128),   // Roxo escuro
+            Windows::UI::ColorHelper::FromArgb(255, 32, 64, 128),   // Azul escuro
+            Windows::UI::ColorHelper::FromArgb(255, 32, 128, 64),   // Verde escuro
+            Windows::UI::ColorHelper::FromArgb(255, 128, 64, 32)    // Laranja escuro
+        };
+        
+        // Aplicar iluminação ambiente a todos os LampArrays
+        for (auto& lampArray : connectedLampArrays)
+        {
+            try
+            {
+                uint32_t lampCount = lampArray.LampCount();
+                if (lampCount == 0) continue;
+                
+                std::vector<Windows::UI::Color> colors;
+                std::vector<int32_t> lampIndexes;
+                
+                // Distribuir cores ambiente pelos LEDs
+                for (uint32_t i = 0; i < lampCount; i++)
+                {
+                    Windows::UI::Color ambientColor = ambientColors[i % ambientColors.size()];
+                    
+                    // Aplicar multiplicador de brilho
+                    uint8_t r = static_cast<uint8_t>(std::min(255.0f, ambientColor.R * brightness_multiplier));
+                    uint8_t g = static_cast<uint8_t>(std::min(255.0f, ambientColor.G * brightness_multiplier));
+                    uint8_t b = static_cast<uint8_t>(std::min(255.0f, ambientColor.B * brightness_multiplier));
+                    
+                    Windows::UI::Color adjustedColor = Windows::UI::ColorHelper::FromArgb(255, r, g, b);
+                    colors.push_back(adjustedColor);
+                    lampIndexes.push_back(static_cast<int32_t>(i));
+                }
+                
+                // Aplicar cores ao LampArray
+                if (!colors.empty())
+                {
+                    winrt::array_view<Windows::UI::Color const> colorArrayView(colors);
+                    winrt::array_view<int32_t const> indexArrayView(lampIndexes);
+                    lampArray.SetColorsForIndices(colorArrayView, indexArrayView);
+                }
+            }
+            catch (...)
+            {
+                continue;
+            }
+        }
+    }
+    catch (...)
+    {
+        // Error during ambient lighting application
+    }
+}
+
+void WindowsDynamicLightingSync::EnableAmbientMode(bool enable)
+{
+    try
+    {
+        if (enable)
+        {
+            // Parar sincronização regular se estiver ativa
+            if (syncTimer && syncTimer->isActive())
+            {
+                syncTimer->stop();
+            }
+            
+            // Aplicar iluminação ambiente
+            ApplyAmbientLighting();
+        }
+        else
+        {
+            // Retomar sincronização regular
+            if (sync_enabled && syncTimer)
+            {
+                syncTimer->start(sync_interval_ms);
+            }
+        }
+    }
+    catch (...)
+    {
+        // Error during ambient mode toggle
     }
 }
 
