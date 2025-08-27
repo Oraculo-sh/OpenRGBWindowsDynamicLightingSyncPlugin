@@ -18,6 +18,7 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <winternl.h>
 #include <winrt/base.h>
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
@@ -1687,20 +1688,12 @@ void WindowsDynamicLightingSync::CreateVirtualLampArrayDevice()
         virtualDeviceCreated = true;
         
         // Log da criação do dispositivo virtual
-        if (RMPointer)
-        {
-            RMPointer->GetLogManager()->LogMessage(LOG_INFO, 
-                "[Windows Dynamic Lighting Sync] Virtual LampArray device created");
-        }
+        // Virtual LampArray device created
     }
     catch (...)
     {
         virtualDeviceCreated = false;
-        if (RMPointer)
-        {
-            RMPointer->GetLogManager()->LogMessage(LOG_ERROR, 
-                "[Windows Dynamic Lighting Sync] Failed to create virtual LampArray device");
-        }
+        // Failed to create virtual LampArray device
     }
 }
 
@@ -1718,19 +1711,11 @@ void WindowsDynamicLightingSync::DestroyVirtualLampArrayDevice()
         virtualDeviceCreated = false;
         
         // Log da destruição do dispositivo virtual
-        if (RMPointer)
-        {
-            RMPointer->GetLogManager()->LogMessage(LOG_INFO, 
-                "[Windows Dynamic Lighting Sync] Virtual LampArray device destroyed");
-        }
+        // Virtual LampArray device destroyed
     }
     catch (...)
     {
-        if (RMPointer)
-        {
-            RMPointer->GetLogManager()->LogMessage(LOG_ERROR, 
-                "[Windows Dynamic Lighting Sync] Failed to destroy virtual LampArray device");
-        }
+        // Failed to destroy virtual LampArray device
     }
 }
 

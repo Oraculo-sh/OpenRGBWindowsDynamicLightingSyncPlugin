@@ -24,6 +24,7 @@ using json = nlohmann::json;
 #include <QLabel>
 #include <QPushButton>
 #include <QCheckBox>
+#include <QComboBox>
 #include <QSpinBox>
 #include <QDoubleSpinBox>
 #include <QGroupBox>
