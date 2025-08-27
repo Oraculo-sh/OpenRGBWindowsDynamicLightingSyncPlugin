@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package IgnorableNamespaces="uap uap10 rescap"
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities">
+  
+  <Identity 
+    Name="WindowsDynamicLightingSync" 
+    Publisher="CN=OpenRGB" 
+    Version="1.0.0.0" 
+    ProcessorArchitecture="neutral" />
+  
+  <Properties>
+    <DisplayName>Windows Dynamic Lighting Sync Plugin</DisplayName>
+    <PublisherDisplayName>OpenRGB Community</PublisherDisplayName>
+    <Logo>Assets\WindowsDynamicLightingSync150x150.png</Logo>
+    <uap10:AllowExternalContent>true</uap10:AllowExternalContent>
+  </Properties>
+  
+  <Resources>
+    <Resource Language="en-us" />
+    <Resource Language="pt-br" />
+  </Resources>
+  
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+  
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources" />
+  </Capabilities>
+  
+  <Applications>
+    <Application Id="WindowsDynamicLightingSync" 
+                 Executable="WindowsDynamicLightingSync.dll" 
+                 uap10:TrustLevel="mediumIL" 
+                 uap10:RuntimeBehavior="win32App">
+      
+      <uap:VisualElements 
+        AppListEntry="none" 
+        DisplayName="Windows Dynamic Lighting Sync Plugin" 
+        Description="OpenRGB plugin for Windows Dynamic Lighting synchronization" 
+        BackgroundColor="transparent" 
+        Square150x150Logo="Assets\WindowsDynamicLightingSync150x150.png" 
+        Square44x44Logo="Assets\WindowsDynamicLightingSync44x44.png" />
+      
+      <!-- AppExtension for Windows Dynamic Lighting -->
+      <Extensions>
+        <uap:Extension Category="windows.appExtension">
+          <uap:AppExtension Name="com.microsoft.windows.lighting" 
+                           Id="WindowsDynamicLightingSync" 
+                           PublicFolder="Public">
+            <Properties>
+              <Service>WindowsDynamicLightingSync</Service>
+              <Category>RGB Synchronization</Category>
+              <Description>Synchronizes OpenRGB devices with Windows Dynamic Lighting</Description>
+              <SupportedDeviceTypes>
+                <DeviceType>Keyboard</DeviceType>
+                <DeviceType>Mouse</DeviceType>
+                <DeviceType>Peripheral</DeviceType>
+                <DeviceType>Chassis</DeviceType>
+              </SupportedDeviceTypes>
+            </Properties>
+          </uap:AppExtension>
+        </uap:Extension>
+      </Extensions>
+      
+    </Application>
+  </Applications>
+  
+</Package>
