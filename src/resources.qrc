@@ -1,5 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>/Assets/WindowsDynamicLightingSync128x128.png</file>
+        <file>Assets/WindowsDynamicLightingSync128x128.png</file>
     </qresource>
 </RCC>
