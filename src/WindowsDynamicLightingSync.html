@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interface Organizada sem CSS</title>
+    <title>Interface Conforme Especificação</title>
 </head>
 <body>
 
@@ -11,10 +11,12 @@
     <main>
         
         <!-- Submenu: Controle Dynamic Lighting Sync Plugin -->
+        <!-- Função Principal: Exibe informações sobre o status da API e do plugin. -->
         <fieldset>
             <legend>Controle Dynamic Lighting Sync Plugin</legend>
             
-            <!-- Checkbox para habilitar o sync -->
+            <!-- Componente 1.1: Checkbox Principal (QCheckBox 'enableSyncCheckbox') -->
+            <!-- Descrição: Controle principal para ativar/desativar a sincronização do plugin. -->
             <p>
                 <input type="checkbox" id="enable-lighting" checked>
                 <label for="enable-lighting">Habilitar Dynamic Lighting Sync</label>
@@ -22,40 +24,50 @@
 
             <hr>
 
-            <!-- Informações de status do Dynamic Lighting -->
+            <!-- Componente 1.2: Labels de Status (QLabels) -->
             <div>
-                <p>API Windows Dynamic Lighting: Conectado.</p>
-                <p>Status Windows Dynamic Lighting: Habilitado.</p>
-                <p>Efeito atual: Gradiente</p>
-                <p>Direção: Horizontal</p>
-                <p>Cor Principal: Amarelo (#FFFF00)</p>
-                <p>Cor Secundaria: Violeta (#8A2BE2)</p>
+                <!-- 'apiStatusLabel': Mostra o status da conexão com a API do Windows. -->
+                <p>API Windows Dynamic Lighting: Conectando...</p>
+                <!-- 'systemStatusLabel': Mostra se o Dynamic Lighting está ativo no Windows. -->
+                <p>Status Windows Dynamic Lighting: Verificando...</p>
+                <!-- 'currentEffectLabel': Mostra o efeito de iluminação atual. -->
+                <p>Efeito atual: Verificando...</p>
+                <!-- 'directionLabel': Mostra a direção do efeito, se aplicável. -->
+                <p>Direção: Verificando...</p>
+                <!-- 'primaryColorLabel': Mostra a cor principal do efeito. -->
+                <p>Cor Principal: Verificando...</p>
+                <!-- 'secondaryColorLabel': Mostra a cor secundária do efeito, se aplicável. -->
+                <p>Cor Secundaria: Verificando...</p>
             </div>
         </fieldset>
 
         <br>
 
         <!-- Submenu: Dispositivos -->
+        <!-- Função: Monitoramento e controle dos dispositivos reconhecidos pelo OpenRGB. -->
         <fieldset>
             <legend>Dispositivos</legend>
             
-            <!-- Contador de dispositivos detectados -->
-            <p>Dispositivos detectados: 4</p>
+            <!-- Componente 2.1: Contador de Dispositivos (QLabel 'deviceCountLabel') -->
+            <p>Dispositivos detectados: 0</p>
             
             <hr>
 
-            <!-- Lista de dispositivos individuais (sem tabela) -->
+            <!-- Componente 2.2: Lista de Dispositivos (Será populada dinamicamente) -->
             <div>
-                <!-- Dispositivo 1 -->
+                <!-- Exemplo de como um dispositivo seria listado -->
                 <p>
-                    <b>Dispositivo RGB 1</b><br>
+                    <b>Dispositivo Exemplo RGB</b><br>
+                    <!-- QCheckBox para habilitar/desabilitar a sincronização deste dispositivo -->
                     <input type="checkbox" id="sync-1">
                     <label for="sync-1">Habilitar Sync</label> | 
+                    <!-- QComboBox para definir o tipo de aplicação de cor -->
                     <label for="type-1">Type:</label>
                     <select id="type-1">
                         <option>Single</option>
                         <option>Dual</option>
                     </select> | 
+                    <!-- QComboBox para definir o modo de iluminação do OpenRGB -->
                     <label for="mode-1">Mode:</label>
                     <select id="mode-1">
                         <option>Direct</option>
@@ -63,80 +75,33 @@
                         <option>Custom</option>
                     </select>
                 </p>
-                <!-- Dispositivo 2 -->
-                <p>
-                    <b>Dispositivo RGB 2</b><br>
-                    <input type="checkbox" id="sync-2" checked>
-                    <label for="sync-2">Habilitar Sync</label> | 
-                    <label for="type-2">Type:</label>
-                    <select id="type-2">
-                        <option>Single</option>
-                        <option selected>Dual</option>
-                    </select> | 
-                    <label for="mode-2">Mode:</label>
-                    <select id="mode-2">
-                        <option>Direct</option>
-                        <option selected>Static</option>
-                        <option>Custom</option>
-                    </select>
-                </p>
-                <!-- Dispositivo 3 -->
-                <p>
-                    <b>Dispositivo RGB 3</b><br>
-                    <input type="checkbox" id="sync-3">
-                    <label for="sync-3">Habilitar Sync</label> | 
-                    <label for="type-3">Type:</label>
-                    <select id="type-3">
-                        <option>Single</option>
-                        <option>Dual</option>
-                    </select> | 
-                    <label for="mode-3">Mode:</label>
-                    <select id="mode-3">
-                        <option>Direct</option>
-                        <option>Static</option>
-                        <option selected>Custom</option>
-                    </select>
-                </p>
-                <!-- Dispositivo 4 -->
-                <p>
-                    <b>Dispositivo RGB 4</b><br>
-                    <input type="checkbox" id="sync-4" checked>
-                    <label for="sync-4">Habilitar Sync</label> | 
-                    <label for="type-4">Type:</label>
-                    <select id="type-4">
-                        <option selected>Single</option>
-                        <option>Dual</option>
-                    </select> | 
-                    <label for="mode-4">Mode:</label>
-                    <select id="mode-4">
-                        <option selected>Direct</option>
-                        <option>Static</option>
-                        <option>Custom</option>
-                    </select>
-                </p>
+                <!-- Mais dispositivos seriam adicionados aqui dinamicamente -->
             </div>
         </fieldset>
 
         <br>
 
         <!-- Submenu: Configurações -->
+        <!-- Função: Controles para ajustes finos do comportamento do plugin. -->
         <fieldset>
             <legend>Configurações</legend>
             
-            <!-- Configuração de intervalo -->
+            <!-- Componente 3.1: Intervalo de Sincronização (QSpinBox 'syncIntervalSpinBox') -->
             <p>
                 <label for="sync-interval">Intervalo de Sincronização (ms):</label>
-                <input type="text" id="sync-interval" value="100 ms">
+                <input type="number" id="sync-interval" min="50" max="5000" step="50" value="100">
             </p>
             
-            <!-- Seção de Controle de Brilho -->
+            <!-- Componente 3.2: Controle de Brilho -->
             <p>
+                <!-- QCheckBox 'enableBrightnessCheckBox' -->
                 <input type="checkbox" id="enable-brightness-control">
                 <label for="enable-brightness-control">Habilitar controle de brilho</label>
             </p>
-            <div id="brightness-slider-container">
-                <label for="brightness-multiplier">Substituir Brilho:</label>
-                <input type="range" id="brightness-multiplier" min="0" max="2" step="0.1" value="1.0">
+            <div>
+                <!-- Container 'brightnessContainer' com QSlider e QLabel -->
+                <label for="brightness-slider">Substituir Brilho:</label>
+                <input type="range" id="brightness-slider" min="0" max="10" step="1" value="10">
                 <span id="brightness-value">1.0</span>
             </div>
         </fieldset>
@@ -144,33 +109,58 @@
         <br>
 
         <!-- Submenu: Informações do Sistema -->
+        <!-- Função: Exibe dados de diagnóstico sobre o sistema e o plugin. -->
         <fieldset>
             <legend>Informações do Sistema</legend>
-            <p>OS: Windows 11 Pro Versão 24H2 Build 26100.4946</p>
-            <p>Compatível com Windows Dynamic Lighting</p>
+            <!-- 'osInfoLabel' -->
+            <p>OS: Windows (Dynamic Lighting Compatible)</p>
+            <!-- 'compatibilityLabel' -->
+            <p>Compatibilidade: Suportado</p>
+            <!-- 'versionLabel' -->
             <p>Versão do Plugin: 1.0.0 (Commit: a5s45r6q)</p>
+            <!-- 'urlLabel' -->
             <p>URL: <a href="https://github.com/Oraculo-sh/OpenRGBWindowsDynamicLightingSyncPlugin" target="_blank">https://github.com/Oraculo-sh/OpenRGBWindowsDynamicLightingSyncPlugin</a></p>
         </fieldset>
 
         <br>
 
-        <!-- Botão de Ação Final (Footer) -->
+        <!-- Botões de Ação Final (Footer) -->
         <div>
-            <button>Atualizar Informações</button>
+            <!-- Componente 4.2: Botão Verificar Atualização (QPushButton 'updateButton') -->
+            <button>Verificar Atualizações</button>
+            <!-- Componente 4.3: Botão Recarregar Plugin (QPushButton) -->
+            <button>Recarrega Plugin</button>
         </div>
     </main>
+
+    <hr style="margin-top: 30px; margin-bottom: 30px;">
+
+    <!-- Seção 8: Exemplo Visual do Menu de Bandeja do Sistema (System Tray Menu) -->
+    <!-- Descrição: Este bloco representa visualmente como o menu na bandeja do sistema deve se parecer. -->
+    <fieldset>
+        <legend>Exemplo Visual: Menu de Bandeja do Sistema</legend>
+        <p>Status: Ativo</p>
+        <p>Dispositivos: 4 conectados</p>
+        <hr>
+        <p><a href="#">Desabilitar Sincronização</a></p>
+        <p><a href="#">Recarregar Plugin</a></p>
+        <p><a href="#">Verificar Atualizações</a></p>
+        <hr>
+        <p><a href="#">Abrir Interface</a></p>
+    </fieldset>
+
 
     <!-- Scripts JavaScript -->
     <script>
         // --- Lógica para o Controle de Brilho ---
+        // Este script é apenas para a demonstração visual em HTML.
         const enableBrightnessCheckbox = document.getElementById('enable-brightness-control');
-        const brightnessSlider = document.getElementById('brightness-multiplier');
+        const brightnessSlider = document.getElementById('brightness-slider');
         const brightnessValue = document.getElementById('brightness-value');
 
         // Função para habilitar/desabilitar o slider de brilho
         function toggleBrightnessControl() {
-            const isEnabled = enableBrightnessCheckbox.checked;
-            brightnessSlider.disabled = !isEnabled;
+            brightnessSlider.disabled = !enableBrightnessCheckbox.checked;
         }
 
         // Adiciona um listener para o evento de mudança no checkbox
@@ -178,7 +168,9 @@
 
         // Adiciona um listener para o slider para atualizar o valor exibido
         brightnessSlider.addEventListener('input', (event) => {
-            brightnessValue.textContent = parseFloat(event.target.value).toFixed(1);
+            // Converte o valor do slider (0-10) para o formato decimal (0.0-1.0)
+            const sliderValue = parseInt(event.target.value, 10);
+            brightnessValue.textContent = (sliderValue / 10).toFixed(1);
         });
 
         // Inicializa o estado do controle de brilho quando a página carrega
@@ -187,3 +179,4 @@
 
 </body>
 </html>
+
