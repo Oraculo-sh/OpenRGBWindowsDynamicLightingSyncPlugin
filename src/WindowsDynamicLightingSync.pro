@@ -111,17 +111,20 @@ HEADERS +=                                                                      
 win32:CONFIG += QTPLUGIN c++17
 
 win32:CONFIG(debug, debug|release) {
-    win32:DESTDIR = debug
+    win32:DESTDIR = ../build/debug
+    win32:OBJECTS_DIR = ../build/_intermediate_debug/.obj
+    win32:MOC_DIR     = ../build/_intermediate_debug/.moc
+    win32:RCC_DIR     = ../build/_intermediate_debug/.qrc
+    win32:UI_DIR      = ../build/_intermediate_debug/.ui
 }
 
 win32:CONFIG(release, debug|release) {
-    win32:DESTDIR = release
+    win32:DESTDIR = ../release
+    win32:OBJECTS_DIR = ../build/_intermediate_release/.obj
+    win32:MOC_DIR     = ../build/_intermediate_release/.moc
+    win32:RCC_DIR     = ../build/_intermediate_release/.qrc
+    win32:UI_DIR      = ../build/_intermediate_release/.ui
 }
-
-win32:OBJECTS_DIR = _intermediate_$$DESTDIR/.obj
-win32:MOC_DIR     = _intermediate_$$DESTDIR/.moc
-win32:RCC_DIR     = _intermediate_$$DESTDIR/.qrc
-win32:UI_DIR      = _intermediate_$$DESTDIR/.ui
 
 win32:contains(QMAKE_TARGET.arch, x86_64) {
     LIBS +=                                                                                     \
