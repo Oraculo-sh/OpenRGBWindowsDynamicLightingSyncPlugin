@@ -3,32 +3,56 @@ setlocal enabledelayedexpansion
 
 echo ========================================
 echo Windows Dynamic Lighting Sync Plugin
-echo Clean Script
+echo Clean Script (Automated)
 echo ========================================
 echo.
 
 REM Paths
 set PROJECT_ROOT=%~dp0..
 set SRC_DIR=%PROJECT_ROOT%\src
+set BUILD_DIR=%PROJECT_ROOT%\build
 set RELEASE_DIR=%PROJECT_ROOT%\release
 
 echo Project Root: %PROJECT_ROOT%
 echo Source Directory: %SRC_DIR%
+echo Build Directory: %BUILD_DIR%
 echo Release Directory: %RELEASE_DIR%
 echo.
 
 echo Cleaning build artifacts...
 
-REM Change to source directory
+REM Clean build directory (entire folder)
+if exist "%BUILD_DIR%" (
+    echo Removing build directory...
+    rmdir /s /q "%BUILD_DIR%" 2>nul
+    if exist "%BUILD_DIR%" (
+        echo WARNING: Could not completely remove build directory
+    ) else (
+        echo - Removed build directory
+    )
+)
+
+REM Clean release directory (entire folder)
+if exist "%RELEASE_DIR%" (
+    echo Removing release directory...
+    rmdir /s /q "%RELEASE_DIR%" 2>nul
+    if exist "%RELEASE_DIR%" (
+        echo WARNING: Could not completely remove release directory
+    ) else (
+        echo - Removed release directory
+    )
+)
+
+REM Change to source directory for cleaning compilation files
 cd /d "%SRC_DIR%"
 if errorlevel 1 (
     echo ERROR: Failed to change to source directory
-    pause
     exit /b 1
 )
 
+echo Cleaning compilation files in src directory...
+
 REM Clean Qt build files
-echo Removing Qt build files...
 if exist Makefile (
     del /q Makefile 2>nul
     echo - Removed Makefile
@@ -46,31 +70,23 @@ if exist *.pro.user (
     echo - Removed .pro.user files
 )
 
-REM Clean build directories
-echo Removing build directories...
+REM Clean local build directories in src
 if exist release (
     rmdir /s /q release 2>nul
-    echo - Removed release directory
+    echo - Removed local release directory
 )
 if exist debug (
     rmdir /s /q debug 2>nul
-    echo - Removed debug directory
-)
-if exist _intermediate_release (
-    rmdir /s /q _intermediate_release 2>nul
-    echo - Removed _intermediate_release directory
-)
-if exist _intermediate_debug (
-    rmdir /s /q _intermediate_debug 2>nul
-    echo - Removed _intermediate_debug directory
+    echo - Removed local debug directory
 )
 if exist _intermediate_* (
-    rmdir /s /q _intermediate_* 2>nul
-    echo - Removed other intermediate directories
+    for /d %%i in (_intermediate_*) do (
+        rmdir /s /q "%%i" 2>nul
+        echo - Removed %%i directory
+    )
 )
 
 REM Clean object files
-echo Removing object files...
 if exist *.obj (
     del /q *.obj 2>nul
     echo - Removed .obj files
@@ -81,7 +97,6 @@ if exist *.o (
 )
 
 REM Clean temporary files
-echo Removing temporary files...
 if exist *.tmp (
     del /q *.tmp 2>nul
     echo - Removed .tmp files
@@ -96,7 +111,6 @@ if exist *~ (
 )
 
 REM Clean Visual Studio files
-echo Removing Visual Studio files...
 if exist *.pdb (
     del /q *.pdb 2>nul
     echo - Removed .pdb files
@@ -114,8 +128,7 @@ if exist *.lib (
     echo - Removed .lib files
 )
 
-REM Clean moc files
-echo Removing Qt moc files...
+REM Clean Qt generated files
 if exist moc_*.cpp (
     del /q moc_*.cpp 2>nul
     echo - Removed moc_*.cpp files
@@ -124,40 +137,19 @@ if exist moc_*.h (
     del /q moc_*.h 2>nul
     echo - Removed moc_*.h files
 )
-
-REM Clean ui files
-echo Removing Qt ui files...
 if exist ui_*.h (
     del /q ui_*.h 2>nul
     echo - Removed ui_*.h files
 )
-
-REM Clean qrc files
-echo Removing Qt resource files...
 if exist qrc_*.cpp (
     del /q qrc_*.cpp 2>nul
     echo - Removed qrc_*.cpp files
 )
 
 REM Clean qmake cache
-echo Removing qmake cache files...
 if exist .qmake.stash (
     del /q .qmake.stash 2>nul
     echo - Removed .qmake.stash
-)
-
-REM Optional: Clean release directory
-echo.
-set /p CLEAN_RELEASE="Do you want to clean the release directory? (y/N): "
-if /i "%CLEAN_RELEASE%"=="y" (
-    if exist "%RELEASE_DIR%\*.dll" (
-        del /q "%RELEASE_DIR%\*.dll" 2>nul
-        echo - Removed DLL files from release directory
-    )
-    if exist "%RELEASE_DIR%\*.exe" (
-        del /q "%RELEASE_DIR%\*.exe" 2>nul
-        echo - Removed EXE files from release directory
-    )
 )
 
 echo.
@@ -165,6 +157,5 @@ echo ========================================
 echo CLEAN COMPLETED!
 echo ========================================
 echo All build artifacts have been removed.
-echo You can now run build.bat for a fresh build.
-echo.
-pause
+echo Ready for fresh compilation.
+echo ========================================
