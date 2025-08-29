@@ -15,6 +15,7 @@ test_moc2.cpp
 test_moc3.cpp
 *.obj
 *.res
+/src/bkp/
 
 # Sample Sample Plugin
 *.pro.user*
