@@ -1,5 +1,5 @@
 #-----------------------------------------------------------------------------------------------#
-# OpenRGB Windows Dynamic Lighting Sync Plugin QMake Project                                   #
+# OpenRGB Windows Dynamic Lighting Sync QMake Project                                                           #
 #-----------------------------------------------------------------------------------------------#
 
 #-----------------------------------------------------------------------------------------------#
@@ -9,7 +9,6 @@ QT +=                                                                           
     core                                                                                        \
     gui                                                                                         \
     widgets                                                                                     \
-    network                                                                                     \
 
 DEFINES += WINDOWSDYNAMICLIGHTINGSYNC_LIBRARY
 TEMPLATE = lib
@@ -24,18 +23,62 @@ CONFIG +=                                                                       
 #-----------------------------------------------------------------------------------------------#
 # Application Configuration                                                                     #
 #-----------------------------------------------------------------------------------------------#
-MAJOR       = 1
-MINOR       = 0
-SUFFIX      = 
+MAJOR       = 0
+MINOR       = 9
+SUFFIX      = git
 
-VERSION_NUM = $$MAJOR"."$$MINOR".0"
+SHORTHASH   = $$system("git rev-parse --short=7 HEAD")
+LASTTAG     = "release_"$$MAJOR"."$$MINOR
+COMMAND     = "git rev-list --count "$$LASTTAG"..HEAD"
+COMMITS     = $$system($$COMMAND)
+
+VERSION_NUM = $$MAJOR"."$$MINOR"."$$COMMITS
 VERSION_STR = $$MAJOR"."$$MINOR
+
+VERSION_DEB = $$VERSION_NUM
+VERSION_WIX = $$VERSION_NUM".0"
+VERSION_AUR = $$VERSION_NUM
+VERSION_RPM = $$VERSION_NUM
+
+equals(SUFFIX, "git") {
+VERSION_STR = $$VERSION_STR"+ ("$$SUFFIX$$COMMITS")"
+VERSION_DEB = $$VERSION_DEB"~git"$$SHORTHASH
+VERSION_AUR = $$VERSION_AUR".g"$$SHORTHASH
+VERSION_RPM = $$VERSION_RPM"^git"$$SHORTHASH
+} else {
+    !isEmpty(SUFFIX) {
+VERSION_STR = $$VERSION_STR"+ ("$$SUFFIX")"
+VERSION_DEB = $$VERSION_DEB"~"$$SUFFIX
+VERSION_AUR = $$VERSION_AUR"."$$SUFFIX
+VERSION_RPM = $$VERSION_RPM"^"$$SUFFIX
+    }
+}
+
+message("VERSION_NUM: "$$VERSION_NUM)
+message("VERSION_STR: "$$VERSION_STR)
+message("VERSION_DEB: "$$VERSION_DEB)
+message("VERSION_WIX: "$$VERSION_WIX)
+message("VERSION_AUR: "$$VERSION_AUR)
+message("VERSION_RPM: "$$VERSION_RPM)
+
+#-----------------------------------------------------------------------------------------------#
+# Automatically generated build information                                                     #
+#-----------------------------------------------------------------------------------------------#
+win32:BUILDDATE = $$system(date /t)
+GIT_COMMIT_ID   = $$system(git --git-dir $$_PRO_FILE_PWD_/../.git --work-tree $$_PRO_FILE_PWD_/.. rev-parse HEAD)
+GIT_COMMIT_DATE = $$system(git --git-dir $$_PRO_FILE_PWD_/../.git --work-tree $$_PRO_FILE_PWD_/.. show -s --format=%ci HEAD)
+GIT_BRANCH      = $$system(git --git-dir $$_PRO_FILE_PWD_/../.git --work-tree $$_PRO_FILE_PWD_/.. rev-parse --abbrev-ref HEAD)
 
 #-----------------------------------------------------------------------------------------------#
 # Inject vars in defines                                                                        #
 #-----------------------------------------------------------------------------------------------#
 DEFINES +=                                                                                      \
-    VERSION_STRING=\\\"$$VERSION_STR\\\"                                                  \
+    VERSION_STRING=\\"\"\"$$VERSION_STR\\"\"\"                                                  \
+    BUILDDATE_STRING=\\"\"\"$$BUILDDATE\\"\"\"                                                  \
+    GIT_COMMIT_ID=\\"\"\"$$GIT_COMMIT_ID\\"\"\"                                                 \
+    GIT_COMMIT_DATE=\\"\"\"$$GIT_COMMIT_DATE\\"\"\"                                             \
+    GIT_BRANCH=\\"\"\"$$GIT_BRANCH\\"\"\"                                                       \
+    LATEST_BUILD_URL=\\"\"\"$$LATEST_BUILD_URL\\"\"\"                                           \
 
 #-----------------------------------------------------------------------------------------------#
 # Includes                                                                                      #
@@ -53,14 +96,14 @@ RESOURCES +=                                                                    
 # OpenRGB Plugin SDK                                                                            #
 #-----------------------------------------------------------------------------------------------#
 INCLUDEPATH +=                                                                                  \
-    ../dependencies/OpenRGBSamplePlugin/OpenRGB/                                               \
-    ../dependencies/OpenRGBSamplePlugin/OpenRGB/i2c_smbus                                      \
+    ../dependencies/OpenRGBSamplePlugin/OpenRGB/                                                \
+    ../dependencies/OpenRGBSamplePlugin/OpenRGB/i2c_smbus                                       \
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/RGBController                                   \
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/net_port                                        \
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/dependencies/json                               \
 
 HEADERS +=                                                                                      \
-    ../dependencies/OpenRGBSamplePlugin/OpenRGB/OpenRGBPluginInterface.h                       \
+    ../dependencies/OpenRGBSamplePlugin/OpenRGB/OpenRGBPluginInterface.h                        \
 
 #-----------------------------------------------------------------------------------------------#
 # Windows-specific Configuration                                                                #
@@ -84,18 +127,12 @@ win32:contains(QMAKE_TARGET.arch, x86_64) {
     LIBS +=                                                                                     \
         -lws2_32                                                                                \
         -lole32                                                                                 \
-        -lwindowsapp                                                                            \
-        -loleaut32                                                                              \
-        -lruntimeobject                                                                         \
 }
 
 win32:contains(QMAKE_TARGET.arch, x86) {
     LIBS +=                                                                                     \
         -lws2_32                                                                                \
         -lole32                                                                                 \
-        -lwindowsapp                                                                            \
-        -loleaut32                                                                              \
-        -lruntimeobject                                                                         \
 }
 
 win32:DEFINES +=                                                                                \
@@ -106,19 +143,6 @@ win32:DEFINES +=                                                                
     WIN32_LEAN_AND_MEAN                                                                         \
 
 #-----------------------------------------------------------------------------------------------#
-# Linux-specific Configuration                                                                  #
+# Note: This plugin is Windows-only due to Windows Dynamic Lighting API requirements          #
+# Linux and macOS configurations have been removed as they are not applicable                 #
 #-----------------------------------------------------------------------------------------------#
-unix:!macx {
-    QMAKE_CXXFLAGS += -std=c++17
-    target.path=$$PREFIX/lib/openrgb/plugins/
-    INSTALLS += target
-}
-
-#-----------------------------------------------------------------------------------------------#
-# MacOS-specific Configuration                                                                  #
-#-----------------------------------------------------------------------------------------------#
-QMAKE_MACOSX_DEPLOYMENT_TARGET = 10.15
-
-macx: {
-    CONFIG += c++17
-}
