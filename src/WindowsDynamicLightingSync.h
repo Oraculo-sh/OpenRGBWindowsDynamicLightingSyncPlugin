@@ -8,6 +8,16 @@
 #include <QString>
 #include <QtPlugin>
 #include <QWidget>
+#include <QGroupBox>
+#include <QCheckBox>
+#include <QLabel>
+#include <QSpinBox>
+#include <QSlider>
+#include <QComboBox>
+#include <QPushButton>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QGridLayout>
 
 class WindowsDynamicLightingSync : public QObject, public OpenRGBPluginInterface
 {
@@ -28,6 +38,38 @@ public:
     void                Unload() override;
 
     static ResourceManagerInterface* RMPointer;
+
+private:
+    // Main Widget
+    QWidget* mainWidget;
+
+    // Controle Dynamic Lighting Sync Plugin
+    QCheckBox* enableSyncCheckbox;
+    QLabel* apiStatusLabel;
+    QLabel* systemStatusLabel;
+    QLabel* currentEffectLabel;
+    QLabel* directionEffectLabel;
+    QLabel* primaryColorLabel;
+    QLabel* secondaryColorLabel;
+
+    // Dispositivos
+    QLabel* deviceCountLabel;
+    QVBoxLayout* deviceListLayout;
+
+    // Configurações
+    QSpinBox* syncIntervalSpinbox;
+    QCheckBox* enableBrightnessCheckbox;
+    QWidget* brightnessContainer;
+    QSlider* brightnessSlider;
+    QLabel* brightnessValueLabel;
+
+    // Informações do Sistema
+    QLabel* osInfoLabel;
+    QLabel* compatibilityLabel;
+    QLabel* versionLabel;
+    QLabel* urlLabel;
+    QPushButton* updateButton;
+    QPushButton* reloadButton;
 };
 
 #endif // WINDOWSDYNAMICLIGHTINGSYNC_H
