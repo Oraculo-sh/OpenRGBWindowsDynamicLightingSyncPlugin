@@ -119,53 +119,66 @@ REM Verify DLL was created
 echo ========================================
 echo STEP 5: VERIFYING BUILD OUTPUT
 echo ========================================
-if exist "%RELEASE_DIR%\WindowsDynamicLightingSync.dll" (
-    echo Plugin DLL found: %RELEASE_DIR%\WindowsDynamicLightingSync.dll
-    
-    REM Get file size
-    for %%A in ("%RELEASE_DIR%\WindowsDynamicLightingSync.dll") do (
-        echo File size: %%~zA bytes
-    )
-    
-    REM Get file timestamp
-    for %%A in ("%RELEASE_DIR%\WindowsDynamicLightingSync.dll") do (
-        echo Last modified: %%~tA
-    )
-    
-    echo.
-    echo ========================================
-    echo BUILD SUCCESSFUL!
-    echo ========================================
-    echo Plugin compiled successfully for Windows 64-bit
-    echo Location: %RELEASE_DIR%\WindowsDynamicLightingSync.dll
-    echo.
-    echo To install the plugin:
-    echo 1. Copy the DLL to your OpenRGB plugins directory
-    echo 2. Restart OpenRGB
-    echo 3. Check Settings ^> Plugins to verify it loaded
-    echo ========================================
-    
-) else (
-    echo ERROR: Plugin DLL was not created!
-    echo Expected location: %RELEASE_DIR%\WindowsDynamicLightingSync.dll
-    echo.
-    echo Checking for DLL in other locations...
-    if exist "release\WindowsDynamicLightingSync.dll" (
-        echo Found DLL in local release directory: release\WindowsDynamicLightingSync.dll
-        echo Moving to project release directory...
-        if not exist "%RELEASE_DIR%" mkdir "%RELEASE_DIR%"
-        copy "release\WindowsDynamicLightingSync.dll" "%RELEASE_DIR%\" >nul
-        if exist "%RELEASE_DIR%\WindowsDynamicLightingSync.dll" (
-            echo Plugin successfully moved to: %RELEASE_DIR%\WindowsDynamicLightingSync.dll
-        ) else (
-            echo ERROR: Failed to move plugin to release directory
-            exit /b 1
-        )
-    ) else (
-        echo No DLL found in any expected location
-        exit /b 1
+set "DLL_FOUND="
+for %%f in ("%RELEASE_DIR%\OpenRGBWindowsDynamicLightingSyncPlugin_*.dll") do (
+    if exist "%%f" (
+        set "DLL_FOUND=%%f"
+        goto :dll_found_in_release
     )
 )
+
+:check_other_locations
+if not defined DLL_FOUND (
+    for %%f in ("%SRC_DIR%\release\OpenRGBWindowsDynamicLightingSyncPlugin_*.dll") do (
+        if exist "%%f" (
+            set "DLL_FOUND=%%f"
+            echo Found DLL in src\release directory: %%f
+            echo Moving to project release directory...
+            if not exist "%RELEASE_DIR%" mkdir "%RELEASE_DIR%"
+            copy "%%f" "%RELEASE_DIR%\" >nul
+            if exist "%RELEASE_DIR%\%%~nxDLL_FOUND%" (
+                set "DLL_FOUND=%RELEASE_DIR%\%%~nxDLL_FOUND%"
+                goto :dll_found_in_release
+            ) else (
+                echo ERROR: Failed to move plugin to release directory
+                exit /b 1
+            )
+        )
+    )
+)
+
+if not defined DLL_FOUND (
+    echo ERROR: Plugin DLL was not created or found!
+    echo Expected pattern: OpenRGBWindowsDynamicLightingSyncPlugin_*.dll
+    echo No DLL found in any expected location
+    exit /b 1
+)
+
+:dll_found_in_release
+echo Plugin DLL found: %DLL_FOUND%
+
+REM Get file size
+for %%A in ("%DLL_FOUND%") do (
+    echo File size: %%~zA bytes
+)
+
+REM Get file timestamp
+for %%A in ("%DLL_FOUND%") do (
+    echo Last modified: %%~tA
+)
+
+echo.
+echo ========================================
+echo BUILD SUCCESSFUL!
+echo ========================================
+echo Plugin compiled successfully for Windows 64-bit
+echo Location: %DLL_FOUND%
+echo.
+echo To install the plugin:
+echo 1. Copy the DLL to your OpenRGB plugins directory
+echo 2. Restart OpenRGB
+echo 3. Check Settings ^> Plugins to verify it loaded
+echo ========================================
 
 echo.
 echo Build process completed successfully!
