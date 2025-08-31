@@ -70,6 +70,14 @@ private:
     QLabel* urlLabel;
     QPushButton* updateButton;
     QPushButton* reloadButton;
+
+private slots:
+    void onEnableSyncCheckboxToggled(bool checked);
+    void onSyncIntervalSpinboxValueChanged(int value);
+    void onEnableBrightnessCheckboxToggled(bool checked);
+    void onBrightnessSliderValueChanged(int value);
+    void onUpdateButtonClicked();
+    void onReloadButtonClicked();
 };
 
 #endif // WINDOWSDYNAMICLIGHTINGSYNC_H
