@@ -9,6 +9,7 @@ QT +=                                                                           
     core                                                                                        \
     gui                                                                                         \
     widgets                                                                                     \
+    network                                                                                    \
 
 DEFINES += WINDOWSDYNAMICLIGHTINGSYNC_LIBRARY
 TEMPLATE = lib
@@ -90,6 +91,7 @@ INCLUDEPATH +=                                                                  
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/RGBController                                   \
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/net_port                                        \
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/dependencies/json                               \
+    ../driver/common                                                                            \
 
 HEADERS +=                                                                                      \
     ../dependencies/OpenRGBSamplePlugin/OpenRGB/OpenRGBPluginInterface.h                        \
@@ -119,12 +121,16 @@ win32:contains(QMAKE_TARGET.arch, x86_64) {
     LIBS +=                                                                                     \
         -lws2_32                                                                                \
         -lole32                                                                                 \
+        -L"$$(WindowsSdkDir)Lib/$$(WindowsSDKVersion)/um/x64" \
+        -lwindowsapp
 }
 
 win32:contains(QMAKE_TARGET.arch, x86) {
     LIBS +=                                                                                     \
         -lws2_32                                                                                \
         -lole32                                                                                 \
+        -L"$$(WindowsSdkDir)Lib/$$(WindowsSDKVersion)/um/x86" \
+        -lwindowsapp
 }
 
 win32:DEFINES +=                                                                                \
