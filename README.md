@@ -2,57 +2,57 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Status](https://img.shields.io/badge/status-alpha-orange.svg)](#) [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue.svg)](#) [![OpenRGB](https://img.shields.io/badge/OpenRGB-plugin-8A2BE2.svg)](#) [![Windows 11](https://img.shields.io/badge/Windows%2011-Compatible-00A4EF.svg)](#)
 
-Sincronize a iluminação RGB do seu PC com o ecossistema nativo do Windows Dynamic Lighting, diretamente a partir do OpenRGB. Este projeto integra dispositivos RGB gerenciados pelo OpenRGB ao recurso de Iluminação Dinâmica do Windows, oferecendo uma experiência unificada, consistente e de baixa latência.
+Synchronize your PC's RGB lighting with Windows Dynamic Lighting directly from OpenRGB. This project bridges RGB devices managed by OpenRGB with the native Windows Dynamic Lighting feature, delivering a unified, consistent, and low-latency experience.
 
-## Sobre o que é este projeto
+## What this project is
 
-Windows Dynamic Lighting Sync é um plugin para OpenRGB que expõe seus dispositivos RGB ao Windows 10/11 por meio do recurso Dynamic Lighting. Na prática, ele atua como uma ponte entre o OpenRGB e o Windows, permitindo que o sistema operacional aplique efeitos, cores e comportamentos de iluminação de forma integrada, sem perder a flexibilidade do OpenRGB.
+Windows Dynamic Lighting Sync is an OpenRGB plugin that exposes your OpenRGB-controlled devices to Windows 10/11 through the Dynamic Lighting feature. In practice, it acts as a bridge between OpenRGB and Windows, allowing the OS to apply effects, colors, and lighting behaviors in an integrated way without sacrificing OpenRGB flexibility.
 
-## Principais funcionalidades
+## Key features
 
-- Integração nativa com Windows Dynamic Lighting (Windows 10/11)
-- Sincronização de cores em tempo real entre Windows e dispositivos do OpenRGB
-- Mapeamento consistente de LEDs (cor e brilho) para resultados previsíveis
-- Operação robusta com tratamento de erros e resiliência a desconexões
-- Compatibilidade com múltiplas marcas e ecossistemas via OpenRGB
+- Native integration with Windows Dynamic Lighting (Windows 10/11)
+- Real-time color synchronization between Windows and OpenRGB devices
+- Consistent LED mapping (color and brightness) for predictable results
+- Robust operation with error handling and resilience to disconnections
+- Broad device compatibility via OpenRGB's ecosystem
 
-## Como funciona (visão geral)
+## How it works (overview)
 
-- O plugin se conecta a um serviço local leve responsável por traduzir mensagens de protocolo entre o OpenRGB e o Windows Dynamic Lighting.
-- Quando o Windows altera um efeito/cor, o plugin recebe a atualização e a aplica nos dispositivos presentes no OpenRGB.
-- Quando o OpenRGB altera um estado, o plugin pode refletir essa mudança, mantendo consistência entre os dois lados quando aplicável.
-- Toda comunicação é local (máquina do usuário), reduzindo latência e evitando dependência de rede.
+- The plugin connects to a lightweight local service that translates protocol messages between OpenRGB and Windows Dynamic Lighting.
+- When Windows changes an effect/color, the plugin receives the update and applies it to devices present in OpenRGB.
+- When OpenRGB changes a state, the plugin can reflect it to keep both sides consistent where applicable.
+- All communication is local (on your machine), reducing latency and avoiding network dependency.
 
-## Escopo e objetivos
+## Scope and goals
 
-- Levar o ecossistema de dispositivos suportados pelo OpenRGB para o mundo do Dynamic Lighting do Windows.
-- Preservar a liberdade de configuração do OpenRGB, enquanto habilita a compatibilidade com aplicativos e recursos do Windows.
-- Fornecer experiência simples de uso, com mínimos passos para começar (sem detalhes técnicos neste documento).
+- Bring the wide ecosystem of OpenRGB-supported devices into the Windows Dynamic Lighting world.
+- Preserve OpenRGB's configuration freedom while enabling compatibility with Windows features and apps.
+- Provide a simple user experience with minimal steps to get started (no technical setup details in this document).
 
-## Compatibilidade
+## Compatibility
 
-- Windows 10 (1903+) e Windows 11 com Dynamic Lighting habilitado.
-- Dispositivos suportados pelo OpenRGB (marcas e controladores variados).
-- OpenRGB com suporte a plugins habilitado.
+- Windows 10 (1903+) and Windows 11 with Dynamic Lighting enabled
+- Devices supported by OpenRGB (various brands and controllers)
+- OpenRGB with plugin support enabled
 
-## Status do projeto
+## Project status
 
-- Versão: 0.1 alpha
-- Foco atual: estabilidade do protocolo, cobertura de casos comuns e validações ponta a ponta.
-- Melhorias planejadas: refinamentos de mapeamento de LEDs, métricas de telemetria opcionais, opções de personalização de sincronização e compatibilidade ampliada.
+- Version: 0.1 alpha
+- Current focus: protocol stability, coverage of common scenarios, and end-to-end validation
+- Planned improvements: LED mapping refinements, optional telemetry metrics, sync customization options, and expanded compatibility
 
-## Privacidade e segurança
+## Privacy & security
 
-- Toda a comunicação acontece localmente no seu computador.
-- O projeto não coleta dados pessoais, nem transfere informações para a internet.
-- Logs e diagnósticos (quando ativados) permanecem locais, destinados apenas à análise de problemas.
+- All communication happens locally on your computer
+- The project does not collect personal data or transfer information to the internet
+- Logs and diagnostics (when enabled) remain local and are intended for troubleshooting only
 
-## Créditos e agradecimentos
+## Acknowledgments
 
-- OpenRGB – pela base sólida de controle de iluminação multiplataforma.
-- Comunidade OpenRGB – pelas referências, amostras e documentação.
-- Microsoft – pelo recurso Windows Dynamic Lighting.
+- [OpenRGB](https://openrgb.org/) — the solid, cross-platform RGB control foundation
+- OpenRGB Community — contributions, references, samples, and documentation (see the project on [GitLab](https://gitlab.com/CalcProgrammer1/OpenRGB))
+- Microsoft — for the Windows Dynamic Lighting feature
 
-## Licença
+## License
 
-Distribuído sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
+Distributed under the MIT License. See the [LICENSE](LICENSE) file for details.
