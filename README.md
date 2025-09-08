@@ -1,114 +1,58 @@
-# Windows Dynamic Lighting Sync Plugin for OpenRGB
+# Windows Dynamic Lighting Sync (OpenRGB Plugin)
 
-## What is this?
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Status](https://img.shields.io/badge/status-alpha-orange.svg)](#) [![Platform](https://img.shields.io/badge/platform-Windows%2010%2F11-blue.svg)](#) [![OpenRGB](https://img.shields.io/badge/OpenRGB-plugin-8A2BE2.svg)](#) [![Windows 11](https://img.shields.io/badge/Windows%2011-Compatible-00A4EF.svg)](#)
 
-Windows Dynamic Lighting Sync is an [OpenRGB](https://gitlab.com/CalcProgrammer1/OpenRGB) plugin that syncs the dynamic lighting of your RGB devices with the Windows 10/11 Dynamic Lighting feature. This plugin allows OpenRGB to control Windows Dynamic Lighting compatible devices through the Windows Runtime API.
+Sincronize a iluminação RGB do seu PC com o ecossistema nativo do Windows Dynamic Lighting, diretamente a partir do OpenRGB. Este projeto integra dispositivos RGB gerenciados pelo OpenRGB ao recurso de Iluminação Dinâmica do Windows, oferecendo uma experiência unificada, consistente e de baixa latência.
 
-## Features
+## Sobre o que é este projeto
 
-- 🔄 **Windows Dynamic Lighting Integration**: Makes OpenRGB devices compatible with Windows Dynamic Lighting, allowing Windows to control all RGB devices
-- 🎨 **Color Matching**: Accurate color reproduction across different lighting systems
-- ⚡ **Real-time Updates**: Instant synchronization of lighting changes
-- 🛡️ **Safe Operation**: Built-in error handling and crash prevention
-- 🔧 **Easy Integration**: Seamless integration with existing OpenRGB setups
-- 📱 **Windows 11 Compatible**: Full support for Windows 11 Dynamic Lighting API
+Windows Dynamic Lighting Sync é um plugin para OpenRGB que expõe seus dispositivos RGB ao Windows 10/11 por meio do recurso Dynamic Lighting. Na prática, ele atua como uma ponte entre o OpenRGB e o Windows, permitindo que o sistema operacional aplique efeitos, cores e comportamentos de iluminação de forma integrada, sem perder a flexibilidade do OpenRGB.
 
-## System Requirements
+## Principais funcionalidades
 
-- Windows 10 (version 1903 or later) or Windows 11
-- OpenRGB 0.7 or later
-- Visual C++ Redistributable 2019 or later
-- Devices compatible with Windows Dynamic Lighting
+- Integração nativa com Windows Dynamic Lighting (Windows 10/11)
+- Sincronização de cores em tempo real entre Windows e dispositivos do OpenRGB
+- Mapeamento consistente de LEDs (cor e brilho) para resultados previsíveis
+- Operação robusta com tratamento de erros e resiliência a desconexões
+- Compatibilidade com múltiplas marcas e ecossistemas via OpenRGB
 
-## Downloads
+## Como funciona (visão geral)
 
-Download the latest release from the [Releases](../../releases) page.
+- O plugin se conecta a um serviço local leve responsável por traduzir mensagens de protocolo entre o OpenRGB e o Windows Dynamic Lighting.
+- Quando o Windows altera um efeito/cor, o plugin recebe a atualização e a aplica nos dispositivos presentes no OpenRGB.
+- Quando o OpenRGB altera um estado, o plugin pode refletir essa mudança, mantendo consistência entre os dois lados quando aplicável.
+- Toda comunicação é local (máquina do usuário), reduzindo latência e evitando dependência de rede.
 
-**Latest Version**: v1.0.0
-- `WindowsDynamicLightingSync.dll` - Plugin file for OpenRGB
+## Escopo e objetivos
 
-## Installation
+- Levar o ecossistema de dispositivos suportados pelo OpenRGB para o mundo do Dynamic Lighting do Windows.
+- Preservar a liberdade de configuração do OpenRGB, enquanto habilita a compatibilidade com aplicativos e recursos do Windows.
+- Fornecer experiência simples de uso, com mínimos passos para começar (sem detalhes técnicos neste documento).
 
-### Automatic Installation
+## Compatibilidade
 
-1. Download the latest `WindowsDynamicLightingSync.dll` from the releases page
-2. Copy the DLL file to your OpenRGB plugins directory:
-   - Default location: `%APPDATA%\OpenRGB\plugins\`
-   - Alternative: `<OpenRGB Installation>\plugins\`
-3. Restart OpenRGB
-4. The plugin should appear in the "Plugins" tab
+- Windows 10 (1903+) e Windows 11 com Dynamic Lighting habilitado.
+- Dispositivos suportados pelo OpenRGB (marcas e controladores variados).
+- OpenRGB com suporte a plugins habilitado.
 
-## Usage
+## Status do projeto
 
-1. **Enable the Plugin**:
-   - Open OpenRGB
-   - Go to the "Plugins" tab
-   - Enable "Windows Dynamic Lighting Sync"
+- Versão: 0.1 alpha
+- Foco atual: estabilidade do protocolo, cobertura de casos comuns e validações ponta a ponta.
+- Melhorias planejadas: refinamentos de mapeamento de LEDs, métricas de telemetria opcionais, opções de personalização de sincronização e compatibilidade ampliada.
 
-2. **Configure Sync Settings**:
-   - The plugin will automatically detect Windows Dynamic Lighting compatible devices
-   - Configure OpenRGB devices to be controlled by Windows Dynamic Lighting
-   - Set update frequency and color matching preferences
+## Privacidade e segurança
 
-3. **Start Syncing**:
-   - Click "Start Sync" to begin synchronization
-   - Changes made in OpenRGB will be reflected in Windows Dynamic Lighting and vice versa
+- Toda a comunicação acontece localmente no seu computador.
+- O projeto não coleta dados pessoais, nem transfere informações para a internet.
+- Logs e diagnósticos (quando ativados) permanecem locais, destinados apenas à análise de problemas.
 
-## Troubleshooting
+## Créditos e agradecimentos
 
-### Plugin Not Loading
-- Ensure OpenRGB is version 0.7 or later
-- Check that the plugin DLL is in the correct plugins directory
-- Verify Visual C++ Redistributable is installed
+- OpenRGB – pela base sólida de controle de iluminação multiplataforma.
+- Comunidade OpenRGB – pelas referências, amostras e documentação.
+- Microsoft – pelo recurso Windows Dynamic Lighting.
 
-### Sync Not Working
-- Confirm your devices support Windows Dynamic Lighting
-- Check Windows Dynamic Lighting is enabled in Windows Settings
-- Restart both OpenRGB and the plugin
+## Licença
 
-### Performance Issues
-- Reduce sync frequency in plugin settings
-- Close unnecessary applications that might interfere with lighting control
-
-## Development
-
-### Project Structure
-```
-WindowsDynamicLightingSync/
-├── src/                          # Source code
-│   ├── WindowsDynamicLightingSync.cpp
-│   ├── WindowsDynamicLightingSync.h
-│   └── WindowsDynamicLightingSync.pro
-├── scripts/                      # Build scripts
-│   └── build-plugin.bat
-├── dependencies/                 # Dependencies
-│   ├── OpenRGBSamplePlugin/     # OpenRGB plugin template
-│   └── OpenRGB-Qt-Packages/     # Qt packages
-└── release/                      # Compiled binaries
-```
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [OpenRGB](https://gitlab.com/CalcProgrammer1/OpenRGB) - The amazing RGB lighting control software
-- [OpenRGB Sample Plugin](https://gitlab.com/OpenRGBDevelopers/OpenRGBSamplePlugin) - Plugin development template
-- Microsoft - For the Windows Dynamic Lighting API
-
-## Support
-
-If you encounter issues or have questions:
-- Check the [Issues](../../issues) page
-- Create a new issue with detailed information about your problem
-- Include your OpenRGB version, Windows version, and device information
-
+Distribuído sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para mais detalhes.
